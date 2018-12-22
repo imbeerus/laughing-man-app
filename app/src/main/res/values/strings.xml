@@ -2,6 +2,8 @@
     <string name="app_name">Laughing Man</string>
     <string name="picture">Picture</string>
     <string name="description_info">Info</string>
+    <string name="description_swap">Swap</string>
+    <string name="description_capture">Capture</string>
     <string name="request_permission">This app needs camera permission.</string>
     <string name="camera_error">This device doesn\'t support Camera2 API.</string>
     <string name="intro_message">

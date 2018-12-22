@@ -19,17 +19,21 @@ class CameraFragment : Fragment(), View.OnClickListener, ActivityCompat.OnReques
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        view.findViewById<View>(R.id.picture).setOnClickListener(this)
+        view.findViewById<View>(R.id.capture).setOnClickListener(this)
         view.findViewById<View>(R.id.info).setOnClickListener(this)
+        view.findViewById<View>(R.id.swap).setOnClickListener(this)
     }
 
     override fun onClick(view: View) {
         when (view.id) {
-            R.id.picture -> lockFocus()
+            R.id.capture -> lockFocus()
             R.id.info -> {
                 activity?.alert(R.string.intro_message){
                     yesButton { }
                 }?.show()
+            }
+            R.id.swap -> {
+                activity?.toast("Swap camera")
             }
         }
     }

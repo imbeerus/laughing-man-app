@@ -20,23 +20,32 @@
             android:layout_alignParentLeft="true"
             android:background="@color/colorPrimary">
 
-        <Button
-                android:id="@+id/picture"
+        <ImageButton
+                android:id="@+id/swap"
+                android:src="@drawable/ic_swap"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|start"
+                android:contentDescription="@string/description_swap"
+                style="@style/AppTheme.CameraButton"/>
+
+        <ImageButton
+                android:id="@+id/capture"
+                android:src="@drawable/ic_camera"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:text="@string/picture"/>
+                android:contentDescription="@string/description_capture"
+                style="@style/AppTheme.CameraButton"/>
 
         <ImageButton
                 android:id="@+id/info"
-                android:contentDescription="@string/description_info"
-                android:background="?android:attr/selectableItemBackground"
+                android:src="@drawable/ic_info"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical|end"
-                android:padding="@dimen/image_button_padding"
-                android:src="@drawable/ic_info_outline"
-                style="@android:style/Widget.Holo.Button.Borderless"/>
+                android:contentDescription="@string/description_info"
+                style="@style/AppTheme.CameraButton"/>
     </FrameLayout>
 
 </RelativeLayout>
