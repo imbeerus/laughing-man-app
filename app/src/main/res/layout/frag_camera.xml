@@ -3,13 +3,19 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
+    <FrameLayout
+            android:id="@+id/space"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/frame_height"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
+            android:background="@color/colorPrimary"/>
+
     <com.lockwood.laughingmanar.ui.components.AutoFitTextureView
             android:id="@+id/texture"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentTop="true"/>
+            android:layout_centerInParent="true"/>
 
     <FrameLayout
             android:id="@+id/control"
@@ -17,7 +23,6 @@
             android:layout_height="@dimen/frame_height"
             android:layout_alignParentBottom="true"
             android:layout_alignParentStart="true"
-            android:layout_alignParentLeft="true"
             android:background="@color/colorPrimary">
 
         <ImageButton
