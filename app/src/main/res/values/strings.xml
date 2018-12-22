@@ -1,3 +1,10 @@
 <resources>
-    <string name="app_name">Laughing Man Ar</string>
+    <string name="app_name">Laughing Man</string>
+    <string name="picture">Picture</string>
+    <string name="description_info">Info</string>
+    <string name="request_permission">This app needs camera permission.</string>
+    <string name="camera_error">This device doesn\'t support Camera2 API.</string>
+    <string name="intro_message">
+        Hide your identity with The Laughing Man logo from Ghost in the Shell: Stand Alone Complex.
+    </string>
 </resources>

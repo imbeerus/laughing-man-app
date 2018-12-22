@@ -11,10 +11,6 @@ fun Context.drawable(res: Int): Drawable? = ContextCompat.getDrawable(this, res)
 
 fun Context.drawable(res: Int, colorRes: Int): Drawable? {
     val drawable = drawable(res)
-    drawableColor(drawable, colorRes)
+    drawable?.let { DrawableCompat.setTint(it, color(colorRes)) }
     return drawable
-}
-
-fun Context.drawableColor(drawable: Drawable?, colorRes: Int) = with(drawable) {
-    this?.let { DrawableCompat.setTint(it, color(colorRes)) }
 }
