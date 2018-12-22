@@ -183,6 +183,10 @@ class CurrentCameraManager private constructor(
         }
     }
 
+    fun isCurrentCameraFront(): Boolean = cameraId == CAMERA_FRONT
+
+    fun isCurrentCameraBack(): Boolean = cameraId == CAMERA_BACK
+
     @SuppressLint("MissingPermission")
     private fun openCamera(width: Int, height: Int) {
         setUpCameraOutputs(width, height)
@@ -440,9 +444,6 @@ class CurrentCameraManager private constructor(
             )
         }
     }
-
-    fun isCurrentCameraFront(): Boolean = cameraId == CAMERA_FRONT
-    fun isCurrentCameraBack(): Boolean = cameraId == CAMERA_BACK
 
     companion object :
         SingletonHolder<CurrentCameraManager, FragmentActivity, AutoFitTextureView>(::CurrentCameraManager) {
