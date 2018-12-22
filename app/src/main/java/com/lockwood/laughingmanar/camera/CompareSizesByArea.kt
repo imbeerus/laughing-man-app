@@ -1,4 +1,4 @@
-package com.lockwood.laughingmanar.model
+package com.lockwood.laughingmanar.camera
 
 import android.util.Size
 import java.lang.Long.signum

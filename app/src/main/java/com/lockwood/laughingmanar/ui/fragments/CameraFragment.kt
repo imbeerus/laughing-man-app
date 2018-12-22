@@ -1,23 +1,33 @@
 package com.lockwood.laughingmanar.ui.fragments
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.support.v4.app.ActivityCompat
+import android.support.v4.app.Fragment
+import android.support.v4.content.ContextCompat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.lockwood.laughingmanar.PIC_FILE_NAME
 import com.lockwood.laughingmanar.R
+import com.lockwood.laughingmanar.REQUEST_CAMERA_PERMISSION
+import com.lockwood.laughingmanar.camera.CurrentCameraManager
 import com.lockwood.laughingmanar.extensions.ctx
+import com.lockwood.laughingmanar.extensions.requestCameraPermission
+import com.lockwood.laughingmanar.ui.components.AutoFitTextureView
 import org.jetbrains.anko.alert
 import org.jetbrains.anko.find
-import org.jetbrains.anko.toast
-import org.jetbrains.anko.yesButton
-import java.io.File
+import org.jetbrains.anko.okButton
 
-class CameraFragment : BaseFragment(), View.OnClickListener {
+class CameraFragment : Fragment(), View.OnClickListener, ActivityCompat.OnRequestPermissionsResultCallback {
 
-    override fun onCreateView(inflater: LayoutInflater,
-                              container: ViewGroup?,
-                              savedInstanceState: Bundle?
+    private lateinit var cameraManager: CurrentCameraManager
+    private lateinit var textureView: AutoFitTextureView
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View? = inflater.inflate(R.layout.frag_camera, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -29,41 +39,48 @@ class CameraFragment : BaseFragment(), View.OnClickListener {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        file = File(context?.getExternalFilesDir(null), PIC_FILE_NAME)
+        val permission = ContextCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA)
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            requestCameraPermission()
+            return
+        }
+        cameraManager = CurrentCameraManager.getInstance(ctx, textureView)
     }
 
     override fun onResume() {
         super.onResume()
-        startBackgroundThread()
-
-        // When the screen is turned off and turned back on, the SurfaceTexture is already
-        // available, and "onSurfaceTextureAvailable" will not be called. In that case, we can open
-        // a camera and start preview from here (otherwise, we wait until the surface is ready in
-        // the SurfaceTextureListener).
-        if (textureView.isAvailable) {
-            openCamera(textureView.width, textureView.height)
-        } else {
-            textureView.surfaceTextureListener = surfaceTextureListener
-        }
+        cameraManager.startBackgroundThread()
+        cameraManager.openCameraIfAvailable()
     }
 
     override fun onPause() {
-        closeCamera()
-        stopBackgroundThread()
+        cameraManager.closeCamera()
+        cameraManager.stopBackgroundThread()
         super.onPause()
     }
 
     override fun onClick(view: View) {
         when (view.id) {
-            R.id.capture -> lockFocus()
+            R.id.capture -> cameraManager.lockFocus()
             R.id.info -> {
                 view.ctx.alert(R.string.intro_message) {
-                    yesButton { }
+                    okButton { }
                 }.show()
             }
-            R.id.swap -> {
-                view.ctx.toast("Swap camera")
+            R.id.swap -> cameraManager.swapCamera()
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        if (requestCode == REQUEST_CAMERA_PERMISSION) {
+            if (grantResults.size != 1 || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                //  TODO: ErrorDialog
+                //  ErrorDialog.newInstance(getString(R.string.request_permission))
+                //  .show(childFragmentManager, FRAGMENT_DIALOG)
             }
+        } else {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+            cameraManager = CurrentCameraManager.getInstance(ctx, textureView)
         }
     }
 

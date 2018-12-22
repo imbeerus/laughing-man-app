@@ -1,4 +1,4 @@
-package com.lockwood.laughingmanar.model
+package com.lockwood.laughingmanar.camera
 
 import android.media.Image
 import android.util.Log
