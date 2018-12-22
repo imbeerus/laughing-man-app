@@ -7,7 +7,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.lockwood.laughingmanar.R
+import com.lockwood.laughingmanar.extensions.ctx
 import org.jetbrains.anko.alert
+import org.jetbrains.anko.find
 import org.jetbrains.anko.toast
 import org.jetbrains.anko.yesButton
 
@@ -19,18 +21,18 @@ class CameraFragment : Fragment(), View.OnClickListener, ActivityCompat.OnReques
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        view.findViewById<View>(R.id.capture).setOnClickListener(this)
-        view.findViewById<View>(R.id.info).setOnClickListener(this)
-        view.findViewById<View>(R.id.swap).setOnClickListener(this)
+        view.find<View>(R.id.capture).setOnClickListener(this)
+        view.find<View>(R.id.info).setOnClickListener(this)
+        view.find<View>(R.id.swap).setOnClickListener(this)
     }
 
     override fun onClick(view: View) {
         when (view.id) {
             R.id.capture -> lockFocus()
             R.id.info -> {
-                activity?.alert(R.string.intro_message){
+                view.ctx.alert(R.string.intro_message){
                     yesButton { }
-                }?.show()
+                }.show()
             }
             R.id.swap -> {
                 activity?.toast("Swap camera")
