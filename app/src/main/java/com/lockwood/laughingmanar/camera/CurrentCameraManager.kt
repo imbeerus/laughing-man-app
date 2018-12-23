@@ -14,12 +14,12 @@ import android.util.SparseIntArray
 import android.view.Surface
 import android.view.TextureView
 import android.view.WindowManager
-import com.lockwood.laughingmanar.PIC_FILE_NAME
 import com.lockwood.laughingmanar.extensions.TAG
 import com.lockwood.laughingmanar.model.SingletonHolder
 import com.lockwood.laughingmanar.ui.components.AutoFitTextureView
 import org.jetbrains.anko.toast
 import java.io.File
+import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
@@ -31,10 +31,10 @@ class CurrentCameraManager private constructor(
     private lateinit var previewRequestBuilder: CaptureRequest.Builder
     private lateinit var previewRequest: CaptureRequest
     private lateinit var previewSize: Size
+    private lateinit var file: File
 
     private val windowManager: WindowManager = ctx.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private val cameraOpenCloseLock = Semaphore(1)
-    private val file: File = File(ctx.getExternalFilesDir(null), PIC_FILE_NAME)
 
     private var cameraId: String = CAMERA_BACK
     private var state = STATE_PREVIEW
@@ -117,6 +117,7 @@ class CurrentCameraManager private constructor(
     }
 
     private val onImageAvailableListener = ImageReader.OnImageAvailableListener {
+        file = makeFile(ctx)
         backgroundHandler?.post(ImageSaver(it.acquireNextImage(), file))
     }
 
@@ -453,6 +454,9 @@ class CurrentCameraManager private constructor(
     }
 
     companion object : SingletonHolder<CurrentCameraManager, Context, AutoFitTextureView>(::CurrentCameraManager) {
+        private const val BASE_PIC_FILE_NAME = "result-"
+        private const val FORMAT_PIC_FILE_NAME = ".jpg"
+
         private const val CAMERA_FRONT = "1"
         private const val CAMERA_BACK = "0"
 
@@ -513,6 +517,15 @@ class CurrentCameraManager private constructor(
                     choices[0]
                 }
             }
+        }
+
+        @JvmStatic
+        private fun makeFile(ctx: Context): File {
+            val cl = Calendar.getInstance().time
+            val df = SimpleDateFormat("yyyy-MM-dd-HH:mm:ss", Locale.ENGLISH)
+            val date = df.format(cl.time)
+            val fileName = "$BASE_PIC_FILE_NAME$date$FORMAT_PIC_FILE_NAME"
+            return File(ctx.getExternalFilesDir(null), fileName)
         }
     }
 }
