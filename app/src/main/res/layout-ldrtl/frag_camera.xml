@@ -21,7 +21,7 @@
                 android:src="@drawable/ic_swap"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical|start"
+                android:layout_gravity="center_vertical|end"
                 android:contentDescription="@string/description_swap"
                 style="@style/AppTheme.CameraButton"/>
 
@@ -39,7 +39,7 @@
                 android:src="@drawable/ic_info"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical|end"
+                android:layout_gravity="center_vertical|start"
                 android:contentDescription="@string/description_info"
                 style="@style/AppTheme.CameraButton"/>
     </FrameLayout>
