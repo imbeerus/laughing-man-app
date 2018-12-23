@@ -521,9 +521,8 @@ class CurrentCameraManager private constructor(
 
         @JvmStatic
         private fun makeFile(ctx: Context): File {
-            val cl = Calendar.getInstance().time
             val df = SimpleDateFormat("yyyy-MM-dd-HH:mm:ss", Locale.ENGLISH)
-            val date = df.format(cl.time)
+            val date = df.format(Calendar.getInstance().time)
             val fileName = "$BASE_PIC_FILE_NAME$date$FORMAT_PIC_FILE_NAME"
             return File(ctx.getExternalFilesDir(null), fileName)
         }
