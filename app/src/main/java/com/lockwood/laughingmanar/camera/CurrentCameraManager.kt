@@ -8,12 +8,12 @@ import android.hardware.camera2.*
 import android.media.ImageReader
 import android.os.Handler
 import android.os.HandlerThread
-import android.support.v4.app.FragmentActivity
 import android.util.Log
 import android.util.Size
 import android.util.SparseIntArray
 import android.view.Surface
 import android.view.TextureView
+import android.view.WindowManager
 import com.lockwood.laughingmanar.PIC_FILE_NAME
 import com.lockwood.laughingmanar.extensions.TAG
 import com.lockwood.laughingmanar.model.SingletonHolder
@@ -25,25 +25,27 @@ import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 
 class CurrentCameraManager private constructor(
-    private val ctx: FragmentActivity,
-    private val textureView: AutoFitTextureView
+    private var ctx: Context,
+    private var textureView: AutoFitTextureView
 ) {
     private lateinit var previewRequestBuilder: CaptureRequest.Builder
     private lateinit var previewRequest: CaptureRequest
     private lateinit var previewSize: Size
+
+    private val windowManager: WindowManager = ctx.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    private val cameraOpenCloseLock = Semaphore(1)
+    private val file: File = File(ctx.getExternalFilesDir(null), PIC_FILE_NAME)
+
+    private var cameraId: String = CAMERA_BACK
+    private var state = STATE_PREVIEW
+    private var flashSupported = false
+    private var sensorOrientation = 0
 
     private var cameraDevice: CameraDevice? = null
     private var captureSession: CameraCaptureSession? = null
     private var backgroundThread: HandlerThread? = null
     private var backgroundHandler: Handler? = null
     private var imageReader: ImageReader? = null
-
-    private var cameraId: String = CAMERA_BACK
-    private var file: File = File(ctx.getExternalFilesDir(null), PIC_FILE_NAME)
-    private var state = STATE_PREVIEW
-    private val cameraOpenCloseLock = Semaphore(1)
-    private var flashSupported = false
-    private var sensorOrientation = 0
 
     private val surfaceTextureListener = object : TextureView.SurfaceTextureListener {
         override fun onSurfaceTextureAvailable(t: SurfaceTexture, w: Int, h: Int) = openCamera(w, h)
@@ -110,12 +112,17 @@ class CurrentCameraManager private constructor(
 
         override fun onError(cameraDevice: CameraDevice, error: Int) {
             onDisconnected(cameraDevice)
-            ctx.finish()
+//          TODO: finish();
         }
     }
 
     private val onImageAvailableListener = ImageReader.OnImageAvailableListener {
         backgroundHandler?.post(ImageSaver(it.acquireNextImage(), file))
+    }
+
+    fun update(newContext: Context, newTextureView: AutoFitTextureView) {
+        ctx = newContext
+        textureView = newTextureView
     }
 
     fun openCameraIfAvailable() {
@@ -220,13 +227,13 @@ class CurrentCameraManager private constructor(
             }
             // Find out if we need to swap dimension to get the preview size relative to sensor
             // coordinate.
-            val displayRotation = ctx.windowManager.defaultDisplay.rotation
+            val displayRotation = windowManager.defaultDisplay.rotation
 
             sensorOrientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)
             val swappedDimensions = areDimensionsSwapped(displayRotation)
 
             val displaySize = Point()
-            ctx.windowManager.defaultDisplay.getSize(displaySize)
+            windowManager.defaultDisplay.getSize(displaySize)
             val rotatedPreviewWidth = if (swappedDimensions) height else width
             val rotatedPreviewHeight = if (swappedDimensions) width else height
             var maxPreviewWidth = if (swappedDimensions) displaySize.y else displaySize.x
@@ -325,7 +332,7 @@ class CurrentCameraManager private constructor(
     }
 
     private fun configureTransform(viewWidth: Int, viewHeight: Int) {
-        val rotation = ctx.windowManager.defaultDisplay.rotation
+        val rotation = windowManager.defaultDisplay.rotation
         val matrix = Matrix()
         val viewRect = RectF(0f, 0f, viewWidth.toFloat(), viewHeight.toFloat())
         val bufferRect = RectF(0f, 0f, previewSize.height.toFloat(), previewSize.width.toFloat())
@@ -368,7 +375,7 @@ class CurrentCameraManager private constructor(
     private fun captureStillPicture() {
         try {
             if (cameraDevice == null) return
-            val rotation = ctx.windowManager.defaultDisplay.rotation
+            val rotation = windowManager.defaultDisplay.rotation
 
             // This is the CaptureRequest.Builder that we use to take a picture.
             val captureBuilder = cameraDevice?.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE)?.apply {
@@ -445,8 +452,7 @@ class CurrentCameraManager private constructor(
         }
     }
 
-    companion object :
-        SingletonHolder<CurrentCameraManager, FragmentActivity, AutoFitTextureView>(::CurrentCameraManager) {
+    companion object : SingletonHolder<CurrentCameraManager, Context, AutoFitTextureView>(::CurrentCameraManager) {
         private const val CAMERA_FRONT = "1"
         private const val CAMERA_BACK = "0"
 

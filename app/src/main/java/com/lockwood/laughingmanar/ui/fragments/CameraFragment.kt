@@ -49,6 +49,7 @@ class CameraFragment : Fragment(), View.OnClickListener, ActivityCompat.OnReques
 
     override fun onResume() {
         super.onResume()
+        cameraManager.update(ctx, textureView)
         cameraManager.startBackgroundThread()
         cameraManager.openCameraIfAvailable()
     }

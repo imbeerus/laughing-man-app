@@ -1,29 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-    <FrameLayout
-            android:id="@+id/space"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/frame_height"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentStart="true"
-            android:background="@color/colorPrimary"/>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent">
 
     <com.lockwood.laughingmanar.ui.components.AutoFitTextureView
             android:id="@+id/texture"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"/>
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"/>
 
     <FrameLayout
             android:id="@+id/control"
             android:layout_width="match_parent"
             android:layout_height="@dimen/frame_height"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentStart="true"
-            android:background="@color/colorPrimary">
+            android:background="@color/controlColor"
+            android:layout_gravity="bottom|center_horizontal">
 
         <ImageButton
                 android:id="@+id/swap"
@@ -53,4 +44,4 @@
                 style="@style/AppTheme.CameraButton"/>
     </FrameLayout>
 
-</RelativeLayout>
+</FrameLayout>
