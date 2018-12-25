@@ -13,6 +13,8 @@ import com.lockwood.laughingmanar.R
 import com.lockwood.laughingmanar.REQUEST_CAMERA_PERMISSION
 import com.lockwood.laughingmanar.camera.CurrentCameraManager
 import com.lockwood.laughingmanar.extensions.ctx
+import com.lockwood.laughingmanar.extensions.openFolder
+import com.lockwood.laughingmanar.extensions.openResFolder
 import com.lockwood.laughingmanar.extensions.requestCameraPermission
 import com.lockwood.laughingmanar.ui.components.AutoFitTextureView
 import org.jetbrains.anko.alert
@@ -65,7 +67,7 @@ class CameraFragment : Fragment(), View.OnClickListener, ActivityCompat.OnReques
             R.id.capture -> cameraManager.lockFocus()
             R.id.info -> {
                 view.ctx.alert(R.string.intro_message) {
-                    okButton { }
+                    positiveButton("Results") { activity?.openResFolder() }
                 }.show()
             }
             R.id.swap -> cameraManager.swapCamera()

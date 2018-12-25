@@ -17,6 +17,7 @@ import android.view.WindowManager
 import com.lockwood.laughingmanar.extensions.TAG
 import com.lockwood.laughingmanar.model.SingletonHolder
 import com.lockwood.laughingmanar.ui.components.AutoFitTextureView
+import org.jetbrains.anko.longToast
 import org.jetbrains.anko.toast
 import java.io.File
 import java.text.SimpleDateFormat
@@ -404,7 +405,7 @@ class CurrentCameraManager private constructor(
                     request: CaptureRequest,
                     result: TotalCaptureResult
                 ) {
-                    ctx.toast("Saved: $file")
+                    ctx.longToast("Saved: $file")
                     Log.d(TAG, file.toString())
                     unlockFocus()
                 }
