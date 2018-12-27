@@ -8,16 +8,20 @@ import android.hardware.camera2.*
 import android.media.ImageReader
 import android.os.Handler
 import android.os.HandlerThread
+import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.util.Size
 import android.util.SparseIntArray
 import android.view.Surface
 import android.view.TextureView
 import android.view.WindowManager
+import com.lockwood.laughingmanar.R
 import com.lockwood.laughingmanar.extensions.TAG
 import com.lockwood.laughingmanar.model.SingletonHolder
 import com.lockwood.laughingmanar.ui.components.AutoFitTextureView
+import org.jetbrains.anko.alert
 import org.jetbrains.anko.longToast
+import org.jetbrains.anko.okButton
 import org.jetbrains.anko.toast
 import java.io.File
 import java.text.SimpleDateFormat
@@ -113,7 +117,7 @@ class CurrentCameraManager private constructor(
 
         override fun onError(cameraDevice: CameraDevice, error: Int) {
             onDisconnected(cameraDevice)
-//          TODO: finish();
+            (ctx as AppCompatActivity).finish()
         }
     }
 
@@ -261,9 +265,9 @@ class CurrentCameraManager private constructor(
         } catch (e: CameraAccessException) {
             Log.e(TAG, e.toString())
         } catch (e: NullPointerException) {
-            //  TODO: ErrorDialog
-            //  ErrorDialog.newInstance(getString(R.string.camera_error))
-            //  ctx.show(childFragmentManager, FRAGMENT_DIALOG)
+            ctx.alert(R.string.camera_error) {
+                okButton { (ctx as AppCompatActivity).finish() }
+            }
         }
     }
 

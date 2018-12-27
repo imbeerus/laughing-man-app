@@ -13,11 +13,10 @@ import com.lockwood.laughingmanar.R
 import com.lockwood.laughingmanar.REQUEST_CAMERA_PERMISSION
 import com.lockwood.laughingmanar.camera.CurrentCameraManager
 import com.lockwood.laughingmanar.extensions.ctx
-import com.lockwood.laughingmanar.extensions.openFolder
 import com.lockwood.laughingmanar.extensions.openResFolder
-import com.lockwood.laughingmanar.extensions.requestCameraPermission
 import com.lockwood.laughingmanar.ui.components.AutoFitTextureView
 import org.jetbrains.anko.alert
+import org.jetbrains.anko.cancelButton
 import org.jetbrains.anko.find
 import org.jetbrains.anko.okButton
 
@@ -74,12 +73,31 @@ class CameraFragment : Fragment(), View.OnClickListener, ActivityCompat.OnReques
         }
     }
 
+    private fun requestCameraPermission() {
+        if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
+            ctx.alert(R.string.request_permission) {
+                okButton {
+                    parentFragment?.requestPermissions(arrayOf(Manifest.permission.CAMERA), REQUEST_CAMERA_PERMISSION)
+                }
+                cancelButton { parentFragment?.activity?.finish() }
+            }
+        } else {
+            requestPermissions(arrayOf(Manifest.permission.CAMERA), REQUEST_CAMERA_PERMISSION)
+        }
+    }
+
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         if (requestCode == REQUEST_CAMERA_PERMISSION) {
             if (grantResults.size != 1 || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                //  TODO: ErrorDialog
-                //  ErrorDialog.newInstance(getString(R.string.request_permission))
-                //  .show(childFragmentManager, FRAGMENT_DIALOG)
+                ctx.alert(R.string.request_permission) {
+                    okButton {
+                        parentFragment?.requestPermissions(
+                            arrayOf(Manifest.permission.CAMERA),
+                            REQUEST_CAMERA_PERMISSION
+                        )
+                    }
+                    cancelButton { parentFragment?.activity?.finish() }
+                }
             }
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults)
