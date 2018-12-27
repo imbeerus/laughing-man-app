@@ -1,6 +1,7 @@
 package com.lockwood.laughingmanar.camera
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.*
@@ -24,21 +25,22 @@ import org.jetbrains.anko.longToast
 import org.jetbrains.anko.okButton
 import org.jetbrains.anko.toast
 import java.io.File
-import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 
-class CurrentCameraManager private constructor(
-    private var ctx: Context,
+class CameraSource private constructor(
+    private var activity: Activity,
     private var textureView: AutoFitTextureView
 ) {
+    var cameraDevice: CameraDevice? = null
+
     private lateinit var previewRequestBuilder: CaptureRequest.Builder
     private lateinit var previewRequest: CaptureRequest
     private lateinit var previewSize: Size
     private lateinit var file: File
 
-    private val windowManager: WindowManager = ctx.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    private val windowManager: WindowManager = activity.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private val cameraOpenCloseLock = Semaphore(1)
 
     private var cameraId: String = CAMERA_BACK
@@ -46,7 +48,6 @@ class CurrentCameraManager private constructor(
     private var flashSupported = false
     private var sensorOrientation = 0
 
-    private var cameraDevice: CameraDevice? = null
     private var captureSession: CameraCaptureSession? = null
     private var backgroundThread: HandlerThread? = null
     private var backgroundHandler: Handler? = null
@@ -117,17 +118,17 @@ class CurrentCameraManager private constructor(
 
         override fun onError(cameraDevice: CameraDevice, error: Int) {
             onDisconnected(cameraDevice)
-            (ctx as AppCompatActivity).finish()
+            (activity as AppCompatActivity).finish()
         }
     }
 
     private val onImageAvailableListener = ImageReader.OnImageAvailableListener {
-        file = makeFile(ctx)
+        file = SaveUtils.makeFile(activity)
         backgroundHandler?.post(ImageSaver(it.acquireNextImage(), file))
     }
 
-    fun update(newContext: Context, newTextureView: AutoFitTextureView) {
-        ctx = newContext
+    fun update(newContext: Activity, newTextureView: AutoFitTextureView) {
+        activity = newContext
         textureView = newTextureView
     }
 
@@ -204,7 +205,7 @@ class CurrentCameraManager private constructor(
     private fun openCamera(width: Int, height: Int) {
         setUpCameraOutputs(width, height)
         configureTransform(width, height)
-        val manager = ctx.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        val manager = activity.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         try {
             // Wait for camera to open - 2.5 seconds is sufficient
             if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
@@ -219,7 +220,7 @@ class CurrentCameraManager private constructor(
     }
 
     private fun setUpCameraOutputs(width: Int, height: Int) {
-        val manager = ctx.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+        val manager = activity.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         try {
             val characteristics = manager.getCameraCharacteristics(cameraId)
             val map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
@@ -256,7 +257,7 @@ class CurrentCameraManager private constructor(
             )
 
             // We fit the aspect ratio of TextureView to the size of preview we picked.
-            if (ctx.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            if (activity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 textureView.setAspectRatio(previewSize.width, previewSize.height)
             } else {
                 textureView.setAspectRatio(previewSize.height, previewSize.width)
@@ -265,7 +266,7 @@ class CurrentCameraManager private constructor(
         } catch (e: CameraAccessException) {
             Log.e(TAG, e.toString())
         } catch (e: NullPointerException) {
-            ctx.alert(R.string.camera_error) {
+            activity.alert(R.string.camera_error) {
                 okButton { (ctx as AppCompatActivity).finish() }
             }
         }
@@ -327,7 +328,7 @@ class CurrentCameraManager private constructor(
                     }
 
                     override fun onConfigureFailed(session: CameraCaptureSession) {
-                        ctx.toast("Failed")
+                        activity.toast("Failed")
                     }
                 }, null
             )
@@ -409,7 +410,7 @@ class CurrentCameraManager private constructor(
                     request: CaptureRequest,
                     result: TotalCaptureResult
                 ) {
-                    ctx.longToast("Saved: $file")
+                    activity.longToast("Saved: $file")
                     Log.d(TAG, file.toString())
                     unlockFocus()
                 }
@@ -458,10 +459,7 @@ class CurrentCameraManager private constructor(
         }
     }
 
-    companion object : SingletonHolder<CurrentCameraManager, Context, AutoFitTextureView>(::CurrentCameraManager) {
-        private const val BASE_PIC_FILE_NAME = "result-"
-        private const val FORMAT_PIC_FILE_NAME = ".jpg"
-
+    companion object : SingletonHolder<CameraSource, Activity, AutoFitTextureView>(::CameraSource) {
         private const val CAMERA_FRONT = "1"
         private const val CAMERA_BACK = "0"
 
@@ -522,14 +520,6 @@ class CurrentCameraManager private constructor(
                     choices[0]
                 }
             }
-        }
-
-        @JvmStatic
-        private fun makeFile(ctx: Context): File {
-            val df = SimpleDateFormat("yyyy-MM-dd-HH:mm:ss", Locale.ENGLISH)
-            val date = df.format(Calendar.getInstance().time)
-            val fileName = "$BASE_PIC_FILE_NAME$date$FORMAT_PIC_FILE_NAME"
-            return File(ctx.getExternalFilesDir(null), fileName)
         }
     }
 }
