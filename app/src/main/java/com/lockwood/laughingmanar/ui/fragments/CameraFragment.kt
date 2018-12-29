@@ -7,9 +7,8 @@ import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.support.v4.view.GestureDetectorCompat
+import android.view.*
 import android.widget.ImageButton
 import com.lockwood.laughingmanar.R
 import com.lockwood.laughingmanar.REQUEST_CAMERA_PERMISSION
@@ -23,12 +22,16 @@ import org.jetbrains.anko.cancelButton
 import org.jetbrains.anko.find
 import org.jetbrains.anko.okButton
 
-class CameraFragment : Fragment(), View.OnClickListener, ActivityCompat.OnRequestPermissionsResultCallback {
+class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener,
+    ActivityCompat.OnRequestPermissionsResultCallback {
 
     private lateinit var cameraSource: CameraSource
     private lateinit var textureView: AutoFitTextureView
 
     private val buttons = listOf(R.id.capture, R.id.info, R.id.swap)
+    private val gestureDetector = GestureDetectorCompat(ctx, object : GestureDetector.SimpleOnGestureListener() {
+
+    })
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -43,6 +46,7 @@ class CameraFragment : Fragment(), View.OnClickListener, ActivityCompat.OnReques
             button.setColorFilter(ctx.color(R.color.blue_grey_100), PorterDuff.Mode.SRC_IN)
         }
         textureView = find(R.id.texture)
+        textureView.setOnTouchListener(this@CameraFragment)
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
@@ -78,6 +82,11 @@ class CameraFragment : Fragment(), View.OnClickListener, ActivityCompat.OnReques
             }
             R.id.swap -> cameraSource.swapCamera()
         }
+    }
+
+    override fun onTouch(v: View, event: MotionEvent): Boolean {
+        v.performClick()
+        return gestureDetector.onTouchEvent(event)
     }
 
     private fun showPermissionAlert() {

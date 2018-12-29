@@ -43,8 +43,8 @@ class CameraSource private constructor(
     private val windowManager: WindowManager = activity.getSystemService(Context.WINDOW_SERVICE) as WindowManager
     private val cameraOpenCloseLock = Semaphore(1)
 
-    private var cameraId: String = CAMERA_BACK
-    private var state = STATE_PREVIEW
+    private var cameraFace: CameraFaces = CameraFaces.CAMERA_BACK
+    private var state = CameraStates.STATE_PREVIEW
     private var flashSupported = false
     private var sensorOrientation = 0
 
@@ -63,21 +63,22 @@ class CameraSource private constructor(
     private val captureCallback = object : CameraCaptureSession.CaptureCallback() {
         private fun process(result: CaptureResult) {
             when (state) {
-                STATE_PREVIEW -> Unit // Do nothing when the camera preview is working normally.
-                STATE_WAITING_LOCK -> capturePicture(result)
-                STATE_WAITING_PRECAPTURE -> {
+                CameraStates.STATE_PREVIEW -> Unit // Do nothing when the camera preview is working normally.
+                CameraStates.STATE_WAITING_LOCK -> capturePicture(result)
+                CameraStates.STATE_WAITING_PRECAPTURE -> {
                     val aeState = result.get(CaptureResult.CONTROL_AE_STATE)
                     if (aeState == null || aeState == CaptureResult.CONTROL_AE_STATE_PRECAPTURE || aeState == CaptureRequest.CONTROL_AE_STATE_FLASH_REQUIRED) {
-                        state = STATE_WAITING_NON_PRECAPTURE
+                        state = CameraStates.STATE_WAITING_NON_PRECAPTURE
                     }
                 }
-                STATE_WAITING_NON_PRECAPTURE -> {
+                CameraStates.STATE_WAITING_NON_PRECAPTURE -> {
                     val aeState = result.get(CaptureResult.CONTROL_AE_STATE)
                     if (aeState == null || aeState != CaptureResult.CONTROL_AE_STATE_PRECAPTURE) {
-                        state = STATE_PICTURE_TAKEN
+                        state = CameraStates.STATE_PICTURE_TAKEN
                         captureStillPicture()
                     }
                 }
+                else -> return
             }
         }
 
@@ -88,7 +89,7 @@ class CameraSource private constructor(
             } else if (afState == CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED || afState == CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED) {
                 val aeState = result.get(CaptureResult.CONTROL_AE_STATE)
                 if (aeState == null || aeState == CaptureResult.CONTROL_AE_STATE_CONVERGED) {
-                    state = STATE_PICTURE_TAKEN
+                    state = CameraStates.STATE_PICTURE_TAKEN
                     captureStillPicture()
                 } else {
                     runPrecaptureSequence()
@@ -157,10 +158,10 @@ class CameraSource private constructor(
     }
 
     fun swapCamera() {
-        if (cameraId == CAMERA_FRONT) {
-            cameraId = CAMERA_BACK
-        } else if (cameraId == CAMERA_BACK) {
-            cameraId = CAMERA_FRONT
+        if (cameraFace == CameraFaces.CAMERA_FRONT) {
+            cameraFace = CameraFaces.CAMERA_BACK
+        } else if (cameraFace == CameraFaces.CAMERA_BACK) {
+            cameraFace = CameraFaces.CAMERA_FRONT
         }
         closeCamera()
         openCameraIfAvailable()
@@ -174,7 +175,7 @@ class CameraSource private constructor(
                 CameraMetadata.CONTROL_AF_TRIGGER_START
             )
             // Tell #captureCallback to wait for the lock.
-            state = STATE_WAITING_LOCK
+            state = CameraStates.STATE_WAITING_LOCK
             captureSession?.capture(previewRequestBuilder.build(), captureCallback, backgroundHandler)
         } catch (e: CameraAccessException) {
             Log.e(TAG, e.toString())
@@ -197,9 +198,9 @@ class CameraSource private constructor(
         }
     }
 
-    fun isCurrentCameraFront(): Boolean = cameraId == CAMERA_FRONT
+    fun isCurrentCameraFront(): Boolean = cameraFace == CameraFaces.CAMERA_FRONT
 
-    fun isCurrentCameraBack(): Boolean = cameraId == CAMERA_BACK
+    fun isCurrentCameraBack(): Boolean = cameraFace == CameraFaces.CAMERA_BACK
 
     @SuppressLint("MissingPermission")
     private fun openCamera(width: Int, height: Int) {
@@ -211,7 +212,7 @@ class CameraSource private constructor(
             if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
                 throw RuntimeException("Time out waiting to lock camera opening.")
             }
-            manager.openCamera(cameraId, stateCallback, backgroundHandler)
+            manager.openCamera(cameraFace.toString(), stateCallback, backgroundHandler)
         } catch (e: CameraAccessException) {
             Log.e(TAG, e.toString())
         } catch (e: InterruptedException) {
@@ -222,7 +223,7 @@ class CameraSource private constructor(
     private fun setUpCameraOutputs(width: Int, height: Int) {
         val manager = activity.getSystemService(Context.CAMERA_SERVICE) as CameraManager
         try {
-            val characteristics = manager.getCameraCharacteristics(cameraId)
+            val characteristics = manager.getCameraCharacteristics(cameraFace.toString())
             val map = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
             // For still image captures, we use the largest available size.
             val largest = Collections.max(
@@ -371,7 +372,7 @@ class CameraSource private constructor(
                 CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER_START
             )
             // Tell #captureCallback to wait for the precapture sequence to be set.
-            state = STATE_WAITING_PRECAPTURE
+            state = CameraStates.STATE_WAITING_PRECAPTURE
             captureSession?.capture(previewRequestBuilder.build(), captureCallback, backgroundHandler)
         } catch (e: CameraAccessException) {
             Log.e(TAG, e.toString())
@@ -439,7 +440,7 @@ class CameraSource private constructor(
                 backgroundHandler
             )
             // After this, the camera will go back to the normal state of preview.
-            state = STATE_PREVIEW
+            state = CameraStates.STATE_PREVIEW
             captureSession?.setRepeatingRequest(
                 previewRequest, captureCallback,
                 backgroundHandler
@@ -460,14 +461,6 @@ class CameraSource private constructor(
     }
 
     companion object : SingletonHolder<CameraSource, Activity, AutoFitTextureView>(::CameraSource) {
-        private const val CAMERA_FRONT = "1"
-        private const val CAMERA_BACK = "0"
-
-        private const val STATE_PREVIEW = 0
-        private const val STATE_WAITING_LOCK = 1
-        private const val STATE_WAITING_PRECAPTURE = 2
-        private const val STATE_WAITING_NON_PRECAPTURE = 3
-        private const val STATE_PICTURE_TAKEN = 4
         private const val MAX_PREVIEW_WIDTH = 1920
         private const val MAX_PREVIEW_HEIGHT = 1080
 
