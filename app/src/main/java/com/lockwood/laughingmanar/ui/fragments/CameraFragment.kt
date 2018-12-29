@@ -2,6 +2,7 @@ package com.lockwood.laughingmanar.ui.fragments
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.PorterDuff
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.app.Fragment
@@ -9,9 +10,11 @@ import android.support.v4.content.ContextCompat
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import com.lockwood.laughingmanar.R
 import com.lockwood.laughingmanar.REQUEST_CAMERA_PERMISSION
 import com.lockwood.laughingmanar.camera.CameraSource
+import com.lockwood.laughingmanar.extensions.color
 import com.lockwood.laughingmanar.extensions.ctx
 import com.lockwood.laughingmanar.extensions.openResFolder
 import com.lockwood.laughingmanar.ui.components.AutoFitTextureView
@@ -25,16 +28,20 @@ class CameraFragment : Fragment(), View.OnClickListener, ActivityCompat.OnReques
     private lateinit var cameraSource: CameraSource
     private lateinit var textureView: AutoFitTextureView
 
+    private val buttons = listOf(R.id.capture, R.id.info, R.id.swap)
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? = inflater.inflate(R.layout.frag_camera, container, false)
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) = with(view){
-        find<View>(R.id.capture).setOnClickListener(this@CameraFragment)
-        find<View>(R.id.info).setOnClickListener(this@CameraFragment)
-        find<View>(R.id.swap).setOnClickListener(this@CameraFragment)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) = with(view) {
+        buttons.forEach { id ->
+            val button = find<ImageButton>(id)
+            button.setOnClickListener(this@CameraFragment)
+            button.setColorFilter(ctx.color(R.color.blue_grey_100), PorterDuff.Mode.SRC_IN)
+        }
         textureView = find(R.id.texture)
     }
 
@@ -73,7 +80,7 @@ class CameraFragment : Fragment(), View.OnClickListener, ActivityCompat.OnReques
         }
     }
 
-    private fun showPermissionAlert(){
+    private fun showPermissionAlert() {
         ctx.alert(R.string.request_permission) {
             okButton {
                 parentFragment?.requestPermissions(arrayOf(Manifest.permission.CAMERA), REQUEST_CAMERA_PERMISSION)

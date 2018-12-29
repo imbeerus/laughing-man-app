@@ -13,7 +13,7 @@
             android:id="@+id/control"
             android:layout_width="match_parent"
             android:layout_height="@dimen/frame_height"
-            android:background="@color/controlColor"
+            android:background="@color/indigo_transparent_500"
             android:layout_gravity="bottom">
 
         <ImageButton
@@ -27,7 +27,7 @@
 
         <ImageButton
                 android:id="@+id/capture"
-                android:src="@drawable/ic_camera"
+                android:src="@drawable/ic_shutter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"

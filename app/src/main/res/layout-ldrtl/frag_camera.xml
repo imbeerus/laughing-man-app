@@ -13,21 +13,21 @@
             android:id="@+id/control"
             android:layout_width="match_parent"
             android:layout_height="@dimen/frame_height"
-            android:background="@color/controlColor"
+            android:background="@color/indigo_transparent_500"
             android:layout_gravity="bottom">
 
         <ImageButton
-                android:id="@+id/swap"
-                android:src="@drawable/ic_swap"
+                android:id="@+id/info"
+                android:src="@drawable/ic_info"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical|end"
-                android:contentDescription="@string/description_swap"
+                android:contentDescription="@string/description_info"
                 style="@style/AppTheme.CameraButton"/>
 
         <ImageButton
                 android:id="@+id/capture"
-                android:src="@drawable/ic_camera"
+                android:src="@drawable/ic_shutter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
@@ -35,13 +35,14 @@
                 style="@style/AppTheme.CameraButton"/>
 
         <ImageButton
-                android:id="@+id/info"
-                android:src="@drawable/ic_info"
+                android:id="@+id/swap"
+                android:src="@drawable/ic_swap"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical|start"
-                android:contentDescription="@string/description_info"
+                android:contentDescription="@string/description_swap"
                 style="@style/AppTheme.CameraButton"/>
+
     </FrameLayout>
 
 </FrameLayout>

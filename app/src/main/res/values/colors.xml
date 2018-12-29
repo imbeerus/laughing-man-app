@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
-    <color name="controlColor">#773F51B5</color>
+    <color name="indigo_500">#3F51B5</color>
+    <color name="indigo_700">#303F9F</color>
+    <color name="indigo_transparent_500">#773F51B5</color>
+    <color name="pink_a_200">#FF4081</color>
+    <color name="blue_grey_100">#cfd8dc</color>
 </resources>
