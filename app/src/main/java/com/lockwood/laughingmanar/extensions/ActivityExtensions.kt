@@ -7,6 +7,9 @@ import android.os.Environment
 import android.support.v4.app.Fragment
 import android.support.v7.app.AppCompatActivity
 
+val AppCompatActivity.currentFragment
+    get() = supportFragmentManager.fragments.first()
+
 fun AppCompatActivity.replaceFragment(id: Int, fragment: Fragment) {
     supportFragmentManager
         .beginTransaction()

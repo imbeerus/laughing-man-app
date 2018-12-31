@@ -20,6 +20,7 @@ import org.jetbrains.anko.cancelButton
 import org.jetbrains.anko.find
 import org.jetbrains.anko.okButton
 
+
 class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener,
     ActivityCompat.OnRequestPermissionsResultCallback {
 
@@ -85,6 +86,10 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener,
     override fun onTouch(v: View, event: MotionEvent): Boolean {
         v.performClick()
         return gestureDetector.onTouchEvent(event)
+    }
+
+    fun onKeyDown(keyCode: Int, event: KeyEvent) {
+        cameraSource.lockFocus()
     }
 
     private fun showPermissionAlert() {
