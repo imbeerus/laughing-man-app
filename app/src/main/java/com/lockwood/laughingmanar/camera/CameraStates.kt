@@ -15,5 +15,5 @@ enum class CameraFaces {
 }
 
 enum class CameraMode {
-    CAMERA_PHOTO, CAMERA_VIDEO
+    MODE_PHOTO, MODE_VIDEO;
 }

@@ -2,7 +2,6 @@ package com.lockwood.laughingmanar.ui.fragments
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.graphics.PorterDuff
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.app.Fragment
@@ -13,7 +12,6 @@ import android.widget.ImageButton
 import com.lockwood.laughingmanar.R
 import com.lockwood.laughingmanar.REQUEST_CAMERA_PERMISSION
 import com.lockwood.laughingmanar.camera.CameraSource
-import com.lockwood.laughingmanar.extensions.color
 import com.lockwood.laughingmanar.extensions.ctx
 import com.lockwood.laughingmanar.extensions.openResFolder
 import com.lockwood.laughingmanar.ui.components.AutoFitTextureView
@@ -27,10 +25,13 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener,
 
     private lateinit var cameraSource: CameraSource
     private lateinit var textureView: AutoFitTextureView
+    private lateinit var captureButton: ImageButton
 
     private val buttons = listOf(R.id.capture, R.id.info, R.id.swap)
     private val gestureDetector = GestureDetectorCompat(ctx, object : GestureDetector.SimpleOnGestureListener() {
-
+        override fun onLongPress(e: MotionEvent) {
+            changCameraMode()
+        }
     })
 
     override fun onCreateView(
@@ -40,11 +41,8 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener,
     ): View? = inflater.inflate(R.layout.frag_camera, container, false)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) = with(view) {
-        buttons.forEach { id ->
-            val button = find<ImageButton>(id)
-            button.setOnClickListener(this@CameraFragment)
-            button.setColorFilter(ctx.color(R.color.blue_grey_100), PorterDuff.Mode.SRC_IN)
-        }
+        buttons.forEach { id -> find<View>(id).setOnClickListener(this@CameraFragment) }
+        captureButton = find(R.id.capture)
         textureView = find(R.id.texture)
         textureView.setOnTouchListener(this@CameraFragment)
     }
@@ -96,6 +94,11 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener,
             }
             cancelButton { parentFragment?.activity?.finish() }
         }
+    }
+
+    private fun changCameraMode() {
+        cameraSource.changCameraMode()
+        // TODO: change capture image
     }
 
     private fun requestCameraPermission() {

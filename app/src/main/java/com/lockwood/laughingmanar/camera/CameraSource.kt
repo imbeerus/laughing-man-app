@@ -21,7 +21,6 @@ import com.lockwood.laughingmanar.extensions.TAG
 import com.lockwood.laughingmanar.model.SingletonHolder
 import com.lockwood.laughingmanar.ui.components.AutoFitTextureView
 import org.jetbrains.anko.alert
-import org.jetbrains.anko.longToast
 import org.jetbrains.anko.okButton
 import org.jetbrains.anko.toast
 import java.io.File
@@ -44,6 +43,7 @@ class CameraSource private constructor(
     private val cameraOpenCloseLock = Semaphore(1)
 
     private var cameraFace: CameraFaces = CameraFaces.CAMERA_BACK
+    private var currentMode: CameraMode = CameraMode.MODE_PHOTO
     private var state = CameraStates.STATE_PREVIEW
     private var flashSupported = false
     private var sensorOrientation = 0
@@ -411,7 +411,7 @@ class CameraSource private constructor(
                     request: CaptureRequest,
                     result: TotalCaptureResult
                 ) {
-                    activity.longToast("Saved: $file")
+                    activity.toast("Saved: $file")
                     Log.d(TAG, file.toString())
                     unlockFocus()
                 }
@@ -457,6 +457,17 @@ class CameraSource private constructor(
                 CaptureRequest.CONTROL_AE_MODE,
                 CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH
             )
+        }
+    }
+
+    fun changCameraMode() {
+        if (currentMode == CameraMode.MODE_PHOTO) {
+            currentMode = CameraMode.MODE_VIDEO
+            activity.toast("Video mode")
+        } else {
+            // TODO: don't change mode if recording
+            currentMode = CameraMode.MODE_PHOTO
+            activity.toast("Photo mode")
         }
     }
 
