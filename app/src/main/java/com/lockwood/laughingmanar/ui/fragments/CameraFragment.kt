@@ -11,6 +11,8 @@ import android.view.*
 import android.widget.ImageButton
 import com.lockwood.laughingmanar.R
 import com.lockwood.laughingmanar.REQUEST_CAMERA_PERMISSION
+import com.lockwood.laughingmanar.REQUEST_VIDEO_PERMISSIONS
+import com.lockwood.laughingmanar.VIDEO_PERMISSIONS
 import com.lockwood.laughingmanar.camera.CameraSource
 import com.lockwood.laughingmanar.extensions.ctx
 import com.lockwood.laughingmanar.extensions.openResFolder
@@ -113,17 +115,10 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener,
     private fun handleVideo() {
         if (cameraSource.isRecordingVideo()) {
             captureButton.setImageResource(R.drawable.ic_start)
+            cameraSource.stopRecordingVideo()
         } else {
             captureButton.setImageResource(R.drawable.ic_stop)
-        }
-    }
-
-    private fun showPermissionAlert() {
-        ctx.alert(R.string.request_permission) {
-            okButton {
-                parentFragment?.requestPermissions(arrayOf(Manifest.permission.CAMERA), REQUEST_CAMERA_PERMISSION)
-            }
-            cancelButton { parentFragment?.activity?.finish() }
+            cameraSource.startRecordingVideo()
         }
     }
 
@@ -136,18 +131,39 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener,
         }
     }
 
+    private fun shouldShowRequestPermissionRationale(permissions: Array<String>) =
+        permissions.any { shouldShowRequestPermissionRationale(it) }
+
+    private fun showCameraPermissionAlert() {
+        ctx.alert(R.string.permission_request) {
+            okButton { parentFragment?.requestPermissions(arrayOf(Manifest.permission.CAMERA), REQUEST_CAMERA_PERMISSION) }
+            cancelButton { parentFragment?.activity?.finish() }
+        }
+    }
+
     private fun requestCameraPermission() {
         if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
-            showPermissionAlert()
+            showCameraPermissionAlert()
         } else {
             requestPermissions(arrayOf(Manifest.permission.CAMERA), REQUEST_CAMERA_PERMISSION)
+        }
+    }
+
+    private fun requestVideoPermissions() {
+        if (shouldShowRequestPermissionRationale(VIDEO_PERMISSIONS)) {
+            ctx.alert(R.string.permission_request) {
+                okButton { parentFragment?.requestPermissions(VIDEO_PERMISSIONS, REQUEST_VIDEO_PERMISSIONS) }
+                cancelButton { parentFragment?.activity?.finish() }
+            }
+        } else {
+            requestPermissions(VIDEO_PERMISSIONS, REQUEST_VIDEO_PERMISSIONS)
         }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         if (requestCode == REQUEST_CAMERA_PERMISSION) {
             if (grantResults.size != 1 || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                showPermissionAlert()
+                showCameraPermissionAlert()
             }
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults)
