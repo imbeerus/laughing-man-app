@@ -2,10 +2,13 @@ package com.lockwood.laughingmanar.ui.fragments
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.app.Fragment
+import android.support.v4.app.FragmentActivity
 import android.support.v4.content.ContextCompat
+import android.support.v4.content.ContextCompat.checkSelfPermission
 import android.support.v4.view.GestureDetectorCompat
 import android.view.*
 import android.widget.ImageButton
@@ -134,20 +137,24 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener,
     private fun shouldShowRequestPermissionRationale(permissions: Array<String>) =
         permissions.any { shouldShowRequestPermissionRationale(it) }
 
-    private fun showCameraPermissionAlert() {
+    private fun showPermissionAlert() {
         ctx.alert(R.string.permission_request) {
-            okButton { parentFragment?.requestPermissions(arrayOf(Manifest.permission.CAMERA), REQUEST_CAMERA_PERMISSION) }
-            cancelButton { parentFragment?.activity?.finish() }
+            okButton { parentFragment?.activity?.finish() }
         }
     }
 
     private fun requestCameraPermission() {
         if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) {
-            showCameraPermissionAlert()
+            showPermissionAlert()
         } else {
             requestPermissions(arrayOf(Manifest.permission.CAMERA), REQUEST_CAMERA_PERMISSION)
         }
     }
+
+    private fun hasPermissionsGranted(permissions: Array<String>) =
+        permissions.none {
+            checkSelfPermission((activity as FragmentActivity), it) != PERMISSION_GRANTED
+        }
 
     private fun requestVideoPermissions() {
         if (shouldShowRequestPermissionRationale(VIDEO_PERMISSIONS)) {
@@ -163,7 +170,18 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener,
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         if (requestCode == REQUEST_CAMERA_PERMISSION) {
             if (grantResults.size != 1 || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                showCameraPermissionAlert()
+                showPermissionAlert()
+            }
+        } else if (requestCode == REQUEST_VIDEO_PERMISSIONS) {
+            if (grantResults.size == VIDEO_PERMISSIONS.size) {
+                for (result in grantResults) {
+                    if (result != PERMISSION_GRANTED) {
+                        showPermissionAlert()
+                        break
+                    }
+                }
+            } else {
+                showPermissionAlert()
             }
         } else {
             super.onRequestPermissionsResult(requestCode, permissions, grantResults)

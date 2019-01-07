@@ -6,10 +6,14 @@ import android.content.Context
 import android.content.res.Configuration
 import android.graphics.*
 import android.hardware.camera2.*
+import android.hardware.camera2.CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP
+import android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION
+import android.hardware.camera2.CameraDevice.TEMPLATE_RECORD
 import android.media.ImageReader
 import android.media.MediaRecorder
 import android.os.Handler
 import android.os.HandlerThread
+import android.support.v4.app.FragmentActivity
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.util.Size
@@ -142,7 +146,7 @@ class CameraSource private constructor(
         textureView = newTextureView
     }
 
-    fun openCameraIfAvailable() = with(textureView){
+    fun openCameraIfAvailable() = with(textureView) {
         if (isAvailable) {
             openCamera(width, height)
         } else {
@@ -159,6 +163,8 @@ class CameraSource private constructor(
             cameraDevice = null
             imageReader?.close()
             imageReader = null
+            mediaRecorder?.release()
+            mediaRecorder = null
         } catch (e: InterruptedException) {
             throw RuntimeException("Interrupted while trying to lock camera closing.", e)
         } finally {
@@ -167,10 +173,6 @@ class CameraSource private constructor(
     }
 
     fun swapCamera() {
-        if (nextVideoAbsolutePath.isNullOrEmpty()) {
-            nextVideoAbsolutePath = getVideoFilePath(activity)
-            Log.d(TAG, "nextVideoAbsolutePath: $nextVideoAbsolutePath")
-        }
         if (isCurrentCameraFront()) {
             cameraFace = CameraFaces.CAMERA_BACK
         } else if (cameraFace == CameraFaces.CAMERA_BACK) {
@@ -218,21 +220,69 @@ class CameraSource private constructor(
 
     @SuppressLint("MissingPermission")
     private fun openCamera(width: Int, height: Int) {
-        setUpCameraOutputs(width, height)
-        configureTransform(width, height)
-        val manager = activity.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-        try {
-            // Wait for camera to open - 2.5 seconds is sufficient
-            if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
-                throw RuntimeException("Time out waiting to lock camera opening.")
+        // TODO: add check permissons
+        if (activity.isFinishing) return
+
+        if (isVideoMode()) {
+            val manager = activity.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+            try {
+                if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
+                    throw RuntimeException("Time out waiting to lock camera opening.")
+                }
+                val cameraId = manager.cameraIdList[0]
+                // Choose the sizes for camera preview and video recording
+                val characteristics = manager.getCameraCharacteristics(cameraId)
+                val map = characteristics.get(SCALER_STREAM_CONFIGURATION_MAP)
+                    ?: throw RuntimeException("Cannot get available preview/video sizes")
+                sensorOrientation = characteristics.get(SENSOR_ORIENTATION)
+                videoSize = chooseVideoSize(map.getOutputSizes(MediaRecorder::class.java))
+                // TODO:
+                previewSize = chooseOptimalSize(
+                    map.getOutputSizes(SurfaceTexture::class.java),
+                    width, height, width, height, videoSize
+                )
+
+                if (activity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    textureView.setAspectRatio(previewSize.width, previewSize.height)
+                } else {
+                    textureView.setAspectRatio(previewSize.height, previewSize.width)
+                }
+                configureTransform(width, height)
+                mediaRecorder = MediaRecorder()
+                manager.openCamera(cameraId, stateCallback, null)
+            } catch (e: CameraAccessException) {
+                activity.toast("Cannot access the camera.")
+                activity.finish()
+            } catch (e: NullPointerException) {
+                // Currently an NPE is thrown when the Camera2API is used but not supported on the
+                // device this code runs.
+                activity.alert(R.string.camera_error) {
+                    okButton { activity.finish() }
+                }
+            } catch (e: InterruptedException) {
+                throw RuntimeException("Interrupted while trying to lock camera opening.")
             }
-            manager.openCamera(cameraFace.toString(), stateCallback, backgroundHandler)
-        } catch (e: CameraAccessException) {
-            Log.e(TAG, e.toString())
-        } catch (e: InterruptedException) {
-            throw RuntimeException("Interrupted while trying to lock camera opening.", e)
+        } else {
+            setUpCameraOutputs(width, height)
+            configureTransform(width, height)
+            val manager = activity.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+            try {
+                // Wait for camera to open - 2.5 seconds is sufficient
+                if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
+                    throw RuntimeException("Time out waiting to lock camera opening.")
+                }
+                manager.openCamera(cameraFace.toString(), stateCallback, backgroundHandler)
+            } catch (e: CameraAccessException) {
+                Log.e(TAG, e.toString())
+            } catch (e: InterruptedException) {
+                throw RuntimeException("Interrupted while trying to lock camera opening.", e)
+            }
         }
     }
+
+    private fun chooseVideoSize(choices: Array<Size>) = choices.firstOrNull {
+        it.width == it.height * 4 / 3 && it.width <= 1080
+    } ?: choices[choices.size - 1]
 
     private fun setUpCameraOutputs(width: Int, height: Int) {
         val manager = activity.getSystemService(Context.CAMERA_SERVICE) as CameraManager
@@ -320,36 +370,40 @@ class CameraSource private constructor(
             // We set up a CaptureRequest.Builder with the output Surface.
             previewRequestBuilder = cameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
             previewRequestBuilder.addTarget(surface)
-            // Here, we create a CameraCaptureSession for camera preview.
-            cameraDevice?.createCaptureSession(
-                Arrays.asList(surface, imageReader?.surface),
-                object : CameraCaptureSession.StateCallback() {
-                    override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
-                        // The camera is already closed
-                        if (cameraDevice == null) return
-                        // When the session is ready, we start displaying the preview.
-                        captureSession = cameraCaptureSession
-                        try {
-                            // Auto focus should be continuous for camera preview.
-                            previewRequestBuilder.set(
-                                CaptureRequest.CONTROL_AF_MODE,
-                                CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE
-                            )
-                            // Flash is automatically enabled when necessary.
-                            setAutoFlash(previewRequestBuilder)
-                            // Finally, we start displaying the camera preview.
-                            previewRequest = previewRequestBuilder.build()
-                            captureSession?.setRepeatingRequest(previewRequest, captureCallback, backgroundHandler)
-                        } catch (e: CameraAccessException) {
-                            Log.e(TAG, e.toString())
-                        }
-                    }
 
-                    override fun onConfigureFailed(session: CameraCaptureSession) {
-                        activity.toast("Failed")
-                    }
-                }, null
-            )
+            if (!isVideoMode()) {
+                // Here, we create a CameraCaptureSession for camera preview.
+                cameraDevice?.createCaptureSession(
+                    Arrays.asList(surface, imageReader?.surface),
+                    object : CameraCaptureSession.StateCallback() {
+                        override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
+                            // The camera is already closed
+                            if (cameraDevice == null) return
+                            // When the session is ready, we start displaying the preview.
+                            captureSession = cameraCaptureSession
+                            updatePreview()
+                        }
+
+                        override fun onConfigureFailed(session: CameraCaptureSession) {
+                            activity.toast("Failed")
+                        }
+                    }, null
+                )
+            } else {
+                cameraDevice?.createCaptureSession(
+                    listOf(surface),
+                    object : CameraCaptureSession.StateCallback() {
+                        override fun onConfigured(session: CameraCaptureSession) {
+                            captureSession = session
+                            updatePreview()
+                        }
+
+                        override fun onConfigureFailed(session: CameraCaptureSession) {
+                            activity.toast("Failed")
+                        }
+                    }, backgroundHandler
+                )
+            }
         } catch (e: CameraAccessException) {
             Log.e(TAG, e.toString())
         }
@@ -363,13 +417,11 @@ class CameraSource private constructor(
 
     @Throws(IOException::class)
     private fun setUpMediaRecorder() {
-        val cameraActivity = activity ?: return
-
         if (nextVideoAbsolutePath.isNullOrEmpty()) {
-            nextVideoAbsolutePath = getVideoFilePath(cameraActivity)
+            nextVideoAbsolutePath = getVideoFilePath()
         }
 
-        val rotation = cameraActivity.windowManager.defaultDisplay.rotation
+        val rotation = activity.windowManager.defaultDisplay.rotation
         when (sensorOrientation) {
             SENSOR_ORIENTATION_DEFAULT_DEGREES ->
                 mediaRecorder?.setOrientationHint(DEFAULT_ORIENTATIONS.get(rotation))
@@ -391,9 +443,9 @@ class CameraSource private constructor(
         }
     }
 
-    private fun getVideoFilePath(context: Context?): String {
-        val filename = "${System.currentTimeMillis()}.mp4"
-        val dir = context?.getExternalFilesDir(null)
+    private fun getVideoFilePath(): String {
+        val filename = SaveUtils.getFileName(SaveUtils.FORMAT_VIDEO_FILE_NAME)
+        val dir = activity.getExternalFilesDir(null)
         return if (dir == null) {
             filename
         } else {
@@ -402,7 +454,7 @@ class CameraSource private constructor(
     }
 
     private fun configureTransform(viewWidth: Int, viewHeight: Int) {
-        val rotation = windowManager.defaultDisplay.rotation
+        val rotation = (activity as FragmentActivity).windowManager.defaultDisplay.rotation
         val matrix = Matrix()
         val viewRect = RectF(0f, 0f, viewWidth.toFloat(), viewHeight.toFloat())
         val bufferRect = RectF(0f, 0f, previewSize.height.toFloat(), previewSize.width.toFloat())
@@ -411,17 +463,15 @@ class CameraSource private constructor(
 
         if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
             bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY())
+            matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL)
             val scale = Math.max(
                 viewHeight.toFloat() / previewSize.height,
                 viewWidth.toFloat() / previewSize.width
             )
             with(matrix) {
-                setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL)
                 postScale(scale, scale, centerX, centerY)
                 postRotate((90 * (rotation - 2)).toFloat(), centerX, centerY)
             }
-        } else if (Surface.ROTATION_180 == rotation) {
-            matrix.postRotate(180f, centerX, centerY)
         }
         textureView.setTransform(matrix)
     }
@@ -439,7 +489,6 @@ class CameraSource private constructor(
         } catch (e: CameraAccessException) {
             Log.e(TAG, e.toString())
         }
-
     }
 
     private fun captureStillPicture() {
@@ -473,7 +522,7 @@ class CameraSource private constructor(
                     request: CaptureRequest,
                     result: TotalCaptureResult
                 ) {
-                    activity.toast("Saved: $file")
+                    activity.toast("Photo saved: $file")
                     Log.d(TAG, file.toString())
                     unlockFocus()
                 }
@@ -522,6 +571,96 @@ class CameraSource private constructor(
         }
     }
 
+    fun stopRecordingVideo() {
+        recordingVideo = false
+        mediaRecorder?.apply {
+            stop()
+            reset()
+        }
+        activity.toast("Video saved: $nextVideoAbsolutePath")
+        nextVideoAbsolutePath = null
+        createCameraPreviewSession()
+    }
+
+    fun startRecordingVideo() {
+        if (cameraDevice == null || !textureView.isAvailable) return
+
+        try {
+            closePreviewSession()
+            setUpMediaRecorder()
+            val texture = textureView.surfaceTexture.apply {
+                setDefaultBufferSize(previewSize.width, previewSize.height)
+            }
+
+            // Set up Surface for camera preview and MediaRecorder
+            val previewSurface = Surface(texture)
+            val recorderSurface = mediaRecorder!!.surface
+            val surfaces = ArrayList<Surface>().apply {
+                add(previewSurface)
+                add(recorderSurface)
+            }
+            previewRequestBuilder = cameraDevice!!.createCaptureRequest(TEMPLATE_RECORD).apply {
+                addTarget(previewSurface)
+                addTarget(recorderSurface)
+            }
+
+            // Start a capture session
+            // Once the session starts, we can update the UI and start recording
+            cameraDevice?.createCaptureSession(
+                surfaces,
+                object : CameraCaptureSession.StateCallback() {
+                    override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
+                        captureSession = cameraCaptureSession
+                        updatePreview()
+                        activity.runOnUiThread {
+                            recordingVideo = true
+                            mediaRecorder?.start()
+                        }
+                    }
+
+                    override fun onConfigureFailed(cameraCaptureSession: CameraCaptureSession) {
+                        activity.toast("Failed")
+                    }
+                }, backgroundHandler
+            )
+        } catch (e: CameraAccessException) {
+            Log.e(TAG, e.toString())
+        } catch (e: IOException) {
+            Log.e(TAG, e.toString())
+        }
+    }
+
+    private fun updatePreview() {
+        if (cameraDevice == null) return
+
+        if (!isVideoMode()) {
+            try {
+                // Auto focus should be continuous for camera preview.
+                previewRequestBuilder.set(
+                    CaptureRequest.CONTROL_AF_MODE,
+                    CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE
+                )
+                // Flash is automatically enabled when necessary.
+                setAutoFlash(previewRequestBuilder)
+                // Finally, we start displaying the camera preview.
+                previewRequest = previewRequestBuilder.build()
+                captureSession?.setRepeatingRequest(previewRequest, captureCallback, backgroundHandler)
+            } catch (e: CameraAccessException) {
+                Log.e(TAG, e.toString())
+            }
+        } else {
+            try {
+                previewRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
+                HandlerThread("CameraPreview").start()
+                captureSession?.setRepeatingRequest(
+                    previewRequestBuilder.build(), null, backgroundHandler
+                )
+            } catch (e: CameraAccessException) {
+                Log.e(TAG, e.toString())
+            }
+        }
+    }
+
     fun changCameraMode() {
         if (currentMode == CameraMode.MODE_PHOTO) {
             currentMode = CameraMode.MODE_VIDEO
@@ -531,6 +670,9 @@ class CameraSource private constructor(
             currentMode = CameraMode.MODE_PHOTO
             activity.toast("Photo mode")
         }
+        // TODO:
+        closeCamera()
+        openCameraIfAvailable()
     }
 
     companion object : SingletonHolder<CameraSource, Activity, AutoFitTextureView>(::CameraSource) {

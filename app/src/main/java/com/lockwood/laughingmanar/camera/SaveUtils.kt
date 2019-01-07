@@ -19,12 +19,12 @@ object SaveUtils {
 
     @JvmStatic
     fun makeFile(ctx: Context, format: String): File {
-        val fileName = getFilePath(format)
+        val fileName = getFileName(format)
         return File(ctx.getExternalFilesDir(null), fileName)
     }
 
     @JvmStatic
-    fun getFilePath(format: String): String {
+    fun getFileName(format: String): String {
         val df = SimpleDateFormat(DATE_FORMAT, Locale.ENGLISH)
         val date = df.format(Calendar.getInstance().time) // current time
         return "$BASE_FILE_NAME$date$format"
