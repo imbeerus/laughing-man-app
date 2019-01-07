@@ -91,6 +91,7 @@ class CameraSource private constructor(
             }
         }
 
+
         private fun capturePicture(result: CaptureResult) {
             val afState = result.get(CaptureResult.CONTROL_AF_STATE)
             if (afState == null) {
@@ -135,6 +136,11 @@ class CameraSource private constructor(
             activity.finish()
         }
     }
+
+    fun isCurrentCameraFront(): Boolean = cameraFace == CameraFaces.CAMERA_FRONT
+    fun isCurrentCameraBack(): Boolean = cameraFace == CameraFaces.CAMERA_BACK
+    fun isRecordingVideo(): Boolean = recordingVideo
+    fun isVideoMode(): Boolean = currentMode == CameraMode.MODE_VIDEO
 
     private val onImageAvailableListener = ImageReader.OnImageAvailableListener {
         file = SaveUtils.makeFile(activity, SaveUtils.FORMAT_PIC_FILE_NAME)
@@ -198,7 +204,8 @@ class CameraSource private constructor(
     }
 
     fun startBackgroundThread() {
-        backgroundThread = HandlerThread("CameraBackground").also { it.start() }
+        backgroundThread = HandlerThread("CameraBackground")
+        backgroundThread?.start()
         backgroundHandler = Handler(backgroundThread?.looper)
     }
 
@@ -213,11 +220,6 @@ class CameraSource private constructor(
         }
     }
 
-    fun isCurrentCameraFront(): Boolean = cameraFace == CameraFaces.CAMERA_FRONT
-    fun isCurrentCameraBack(): Boolean = cameraFace == CameraFaces.CAMERA_BACK
-    fun isRecordingVideo(): Boolean = recordingVideo
-    fun isVideoMode(): Boolean = currentMode == CameraMode.MODE_VIDEO
-
     @SuppressLint("MissingPermission")
     private fun openCamera(width: Int, height: Int) {
         // TODO: add check permissons
@@ -229,18 +231,15 @@ class CameraSource private constructor(
                 if (!cameraOpenCloseLock.tryAcquire(2500, TimeUnit.MILLISECONDS)) {
                     throw RuntimeException("Time out waiting to lock camera opening.")
                 }
-                val cameraId = manager.cameraIdList[0]
+                val cameraId = cameraFace.toString()
                 // Choose the sizes for camera preview and video recording
                 val characteristics = manager.getCameraCharacteristics(cameraId)
                 val map = characteristics.get(SCALER_STREAM_CONFIGURATION_MAP)
                     ?: throw RuntimeException("Cannot get available preview/video sizes")
                 sensorOrientation = characteristics.get(SENSOR_ORIENTATION)
                 videoSize = chooseVideoSize(map.getOutputSizes(MediaRecorder::class.java))
-                // TODO:
-                previewSize = chooseOptimalSize(
-                    map.getOutputSizes(SurfaceTexture::class.java),
-                    width, height, width, height, videoSize
-                )
+                previewSize =
+                        chooseOptimalVideoSize(map.getOutputSizes(SurfaceTexture::class.java), width, height, videoSize)
 
                 if (activity.resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                     textureView.setAspectRatio(previewSize.width, previewSize.height)
@@ -314,7 +313,7 @@ class CameraSource private constructor(
             if (maxPreviewWidth > MAX_PREVIEW_WIDTH) maxPreviewWidth = MAX_PREVIEW_WIDTH
             if (maxPreviewHeight > MAX_PREVIEW_HEIGHT) maxPreviewHeight = MAX_PREVIEW_HEIGHT
 
-            previewSize = chooseOptimalSize(
+            previewSize = chooseOptimalPhotoSize(
                 map.getOutputSizes(SurfaceTexture::class.java),
                 rotatedPreviewWidth, rotatedPreviewHeight,
                 maxPreviewWidth, maxPreviewHeight,
@@ -696,7 +695,7 @@ class CameraSource private constructor(
         }
 
         @JvmStatic
-        private fun chooseOptimalSize(
+        private fun chooseOptimalPhotoSize(
             choices: Array<Size>,
             textureViewWidth: Int,
             textureViewHeight: Int,
@@ -711,9 +710,7 @@ class CameraSource private constructor(
             val w = aspectRatio.width
             val h = aspectRatio.height
             for (option in choices) {
-                if (option.width <= maxWidth && option.height <= maxHeight &&
-                    option.height == option.width * h / w
-                ) {
+                if (option.width <= maxWidth && option.height <= maxHeight && option.height == option.width * h / w) {
                     if (option.width >= textureViewWidth && option.height >= textureViewHeight) {
                         bigEnough.add(option)
                     } else {
@@ -721,7 +718,6 @@ class CameraSource private constructor(
                     }
                 }
             }
-
             // Pick the smallest of those big enough. If there is no one big enough, pick the
             // largest of those not big enough.
             return when {
@@ -732,6 +728,24 @@ class CameraSource private constructor(
                     Log.e(TAG, "Couldn't find any suitable preview size")
                     choices[0]
                 }
+            }
+        }
+
+        private fun chooseOptimalVideoSize(
+            choices: Array<Size>,
+            width: Int,
+            height: Int,
+            aspectRatio: Size
+        ): Size {
+            // Collect the supported resolutions that are at least as big as the preview Surface
+            val w = aspectRatio.width
+            val h = aspectRatio.height
+            val bigEnough = choices.filter { it.height == it.width * h / w && it.width >= width && it.height >= height }
+            // Pick the smallest of those, assuming we found any
+            return if (bigEnough.isNotEmpty()) {
+                Collections.min(bigEnough, CompareSizesByArea())
+            } else {
+                choices[0]
             }
         }
     }
