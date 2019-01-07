@@ -70,22 +70,28 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener,
         cameraSource = CameraSource.getInstance(ctx, textureView)
     }
 
-    override fun onResume() {
+    override fun onResume() = with(cameraSource) {
         super.onResume()
-        cameraSource.update(ctx, textureView)
-        cameraSource.startBackgroundThread()
-        cameraSource.openCameraIfAvailable()
+        update(ctx, textureView)
+        startBackgroundThread()
+        openCameraIfAvailable()
     }
 
-    override fun onPause() {
-        cameraSource.closeCamera()
-        cameraSource.stopBackgroundThread()
+    override fun onPause() = with(cameraSource) {
+        closeCamera()
+        stopBackgroundThread()
         super.onPause()
     }
 
     override fun onClick(view: View) {
         when (view.id) {
-            R.id.capture -> cameraSource.lockFocus()
+            R.id.capture -> {
+                if (cameraSource.isVideoMode()) {
+                    handleVideo()
+                } else {
+                    cameraSource.lockFocus()
+                }
+            }
             R.id.info -> {
                 view.ctx.alert(R.string.intro_message) {
                     positiveButton("Results") { activity?.openResFolder() }
@@ -104,6 +110,14 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener,
         cameraSource.lockFocus()
     }
 
+    private fun handleVideo() {
+        if (cameraSource.isRecordingVideo()) {
+            captureButton.setImageResource(R.drawable.ic_start)
+        } else {
+            captureButton.setImageResource(R.drawable.ic_stop)
+        }
+    }
+
     private fun showPermissionAlert() {
         ctx.alert(R.string.request_permission) {
             okButton {
@@ -113,9 +127,13 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener,
         }
     }
 
-    private fun changCameraMode() {
-        cameraSource.changCameraMode()
-        // TODO: change capture image
+    private fun changCameraMode() = with(cameraSource) {
+        changCameraMode()
+        if (isVideoMode()) {
+            captureButton.setImageResource(R.drawable.ic_start)
+        } else {
+            captureButton.setImageResource(R.drawable.ic_shutter)
+        }
     }
 
     private fun requestCameraPermission() {

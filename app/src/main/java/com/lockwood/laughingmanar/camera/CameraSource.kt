@@ -7,8 +7,10 @@ import android.content.res.Configuration
 import android.graphics.*
 import android.hardware.camera2.*
 import android.media.ImageReader
+import android.media.MediaRecorder
 import android.os.Handler
 import android.os.HandlerThread
+import android.os.Looper.prepare
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.util.Size
@@ -24,6 +26,7 @@ import org.jetbrains.anko.alert
 import org.jetbrains.anko.okButton
 import org.jetbrains.anko.toast
 import java.io.File
+import java.io.IOException
 import java.util.*
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
@@ -32,11 +35,13 @@ class CameraSource private constructor(
     private var activity: Activity,
     private var textureView: AutoFitTextureView
 ) {
-    var cameraDevice: CameraDevice? = null
+    private var cameraDevice: CameraDevice? = null
+    private var mediaRecorder: MediaRecorder? = null
 
     private lateinit var previewRequestBuilder: CaptureRequest.Builder
     private lateinit var previewRequest: CaptureRequest
     private lateinit var previewSize: Size
+    private lateinit var videoSize: Size
     private lateinit var file: File
 
     private val windowManager: WindowManager = activity.getSystemService(Context.WINDOW_SERVICE) as WindowManager
@@ -46,7 +51,9 @@ class CameraSource private constructor(
     private var currentMode: CameraMode = CameraMode.MODE_PHOTO
     private var state = CameraStates.STATE_PREVIEW
     private var flashSupported = false
+    private var recordingVideo = false
     private var sensorOrientation = 0
+    private var nextVideoAbsolutePath: String? = null
 
     private var captureSession: CameraCaptureSession? = null
     private var backgroundThread: HandlerThread? = null
@@ -109,6 +116,9 @@ class CameraSource private constructor(
             cameraOpenCloseLock.release()
             cameraDevice = camera
             createCameraPreviewSession()
+            if (isVideoMode()) {
+                configureTransform(textureView.width, textureView.height)
+            }
         }
 
         override fun onDisconnected(camera: CameraDevice) {
@@ -199,8 +209,9 @@ class CameraSource private constructor(
     }
 
     fun isCurrentCameraFront(): Boolean = cameraFace == CameraFaces.CAMERA_FRONT
-
     fun isCurrentCameraBack(): Boolean = cameraFace == CameraFaces.CAMERA_BACK
+    fun isRecordingVideo(): Boolean = recordingVideo
+    fun isVideoMode(): Boolean = currentMode == CameraMode.MODE_VIDEO
 
     @SuppressLint("MissingPermission")
     private fun openCamera(width: Int, height: Int) {
@@ -294,7 +305,10 @@ class CameraSource private constructor(
     }
 
     private fun createCameraPreviewSession() {
+        if (cameraDevice == null || !textureView.isAvailable) return
+
         try {
+            closePreviewSession()
             val texture = textureView.surfaceTexture
             // We configure the size of default buffer to be the size of camera preview we want.
             texture.setDefaultBufferSize(previewSize.width, previewSize.height)
@@ -337,6 +351,52 @@ class CameraSource private constructor(
             Log.e(TAG, e.toString())
         }
 
+    }
+
+    private fun closePreviewSession() {
+        captureSession?.close()
+        captureSession = null
+    }
+
+    @Throws(IOException::class)
+    private fun setUpMediaRecorder() {
+        val cameraActivity = activity ?: return
+
+        if (nextVideoAbsolutePath.isNullOrEmpty()) {
+            nextVideoAbsolutePath = getVideoFilePath(cameraActivity)
+        }
+
+        val rotation = cameraActivity.windowManager.defaultDisplay.rotation
+        when (sensorOrientation) {
+            SENSOR_ORIENTATION_DEFAULT_DEGREES ->
+                mediaRecorder?.setOrientationHint(DEFAULT_ORIENTATIONS.get(rotation))
+            SENSOR_ORIENTATION_INVERSE_DEGREES ->
+                mediaRecorder?.setOrientationHint(INVERSE_ORIENTATIONS.get(rotation))
+        }
+
+        mediaRecorder?.apply {
+            setAudioSource(MediaRecorder.AudioSource.MIC)
+            setVideoSource(MediaRecorder.VideoSource.SURFACE)
+            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            setOutputFile(nextVideoAbsolutePath)
+            setVideoEncodingBitRate(10000000)
+            setVideoFrameRate(30)
+            setVideoSize(videoSize.width, videoSize.height)
+            setVideoEncoder(MediaRecorder.VideoEncoder.H264)
+            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+            prepare()
+        }
+    }
+
+    private fun getVideoFilePath(context: Context?): String {
+        val filename = "${System.currentTimeMillis()}.mp4"
+        val dir = context?.getExternalFilesDir(null)
+
+        return if (dir == null) {
+            filename
+        } else {
+            "${dir.absolutePath}/$filename"
+        }
     }
 
     private fun configureTransform(viewWidth: Int, viewHeight: Int) {
@@ -391,11 +451,11 @@ class CameraSource private constructor(
 
                 // Sensor orientation is 90 for most devices, or 270 for some devices (eg. Nexus 5X)
                 // We have to take that into account and rotate JPEG properly.
-                // For devices with orientation of 90, we return our mapping from ORIENTATIONS.
+                // For devices with orientation of 90, we return our mapping from DEFAULT_ORIENTATIONS.
                 // For devices with orientation of 270, we need to rotate the JPEG 180 degrees.
                 set(
                     CaptureRequest.JPEG_ORIENTATION,
-                    (ORIENTATIONS.get(rotation) + sensorOrientation + 270) % 360
+                    (DEFAULT_ORIENTATIONS.get(rotation) + sensorOrientation + 270) % 360
                 )
 
                 // Use the same AE and AF modes as the preview.
@@ -475,13 +535,20 @@ class CameraSource private constructor(
         private const val MAX_PREVIEW_WIDTH = 1920
         private const val MAX_PREVIEW_HEIGHT = 1080
 
-        private val ORIENTATIONS = SparseIntArray()
+        private const val SENSOR_ORIENTATION_DEFAULT_DEGREES = 90
+        private const val SENSOR_ORIENTATION_INVERSE_DEGREES = 270
 
-        init {
-            ORIENTATIONS.append(Surface.ROTATION_0, 90)
-            ORIENTATIONS.append(Surface.ROTATION_90, 0)
-            ORIENTATIONS.append(Surface.ROTATION_180, 270)
-            ORIENTATIONS.append(Surface.ROTATION_270, 180)
+        private val DEFAULT_ORIENTATIONS = SparseIntArray().apply {
+            append(Surface.ROTATION_0, 90)
+            append(Surface.ROTATION_90, 0)
+            append(Surface.ROTATION_180, 270)
+            append(Surface.ROTATION_270, 180)
+        }
+        private val INVERSE_ORIENTATIONS = SparseIntArray().apply {
+            append(Surface.ROTATION_0, 270)
+            append(Surface.ROTATION_90, 180)
+            append(Surface.ROTATION_180, 90)
+            append(Surface.ROTATION_270, 0)
         }
 
         @JvmStatic
@@ -514,6 +581,7 @@ class CameraSource private constructor(
             // Pick the smallest of those big enough. If there is no one big enough, pick the
             // largest of those not big enough.
             return when {
+                // TODO: fix find optimal size
                 bigEnough.size > 0 -> Collections.min(bigEnough, CompareSizesByArea())
                 notBigEnough.size > 0 -> Collections.max(notBigEnough, CompareSizesByArea())
                 else -> {

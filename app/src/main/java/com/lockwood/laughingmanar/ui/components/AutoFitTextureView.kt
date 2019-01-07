@@ -5,8 +5,11 @@ import android.util.AttributeSet
 import android.view.TextureView
 import android.view.View
 
-class AutoFitTextureView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyle: Int = 0) :
-    TextureView(context, attrs, defStyle) {
+class AutoFitTextureView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+    defStyle: Int = 0
+) : TextureView(context, attrs, defStyle) {
 
     private var ratioWidth = 0
     private var ratioHeight = 0
@@ -27,10 +30,10 @@ class AutoFitTextureView @JvmOverloads constructor(context: Context, attrs: Attr
         if (ratioWidth == 0 || ratioHeight == 0) {
             setMeasuredDimension(width, height)
         } else {
-            if (width < height * ratioWidth / ratioHeight) {
-                setMeasuredDimension(width, width * ratioHeight / ratioWidth)
+            if (width < ((height * ratioWidth) / ratioHeight)) {
+                setMeasuredDimension(width, (width * ratioHeight) / ratioWidth)
             } else {
-                setMeasuredDimension(height * ratioWidth / ratioHeight, height)
+                setMeasuredDimension((height * ratioWidth) / ratioHeight, height)
             }
         }
     }
