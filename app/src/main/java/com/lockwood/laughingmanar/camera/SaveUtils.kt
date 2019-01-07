@@ -11,16 +11,23 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 object SaveUtils {
-    private const val BASE_PIC_FILE_NAME = "result-"
-    private const val FORMAT_PIC_FILE_NAME = ".jpg"
+    private const val BASE_FILE_NAME = "result-"
     private const val DATE_FORMAT = "yyyy-MM-dd-HH:mm:ss"
 
+    const val FORMAT_PIC_FILE_NAME = ".jpg"
+    const val FORMAT_VIDEO_FILE_NAME = ".mp4"
+
     @JvmStatic
-    fun makeFile(ctx: Context): File {
+    fun makeFile(ctx: Context, format: String): File {
+        val fileName = getFilePath(format)
+        return File(ctx.getExternalFilesDir(null), fileName)
+    }
+
+    @JvmStatic
+    fun getFilePath(format: String): String {
         val df = SimpleDateFormat(DATE_FORMAT, Locale.ENGLISH)
         val date = df.format(Calendar.getInstance().time) // current time
-        val fileName = "$BASE_PIC_FILE_NAME$date$FORMAT_PIC_FILE_NAME"
-        return File(ctx.getExternalFilesDir(null), fileName)
+        return "$BASE_FILE_NAME$date$format"
     }
 }
 

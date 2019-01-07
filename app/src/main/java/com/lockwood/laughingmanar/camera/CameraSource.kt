@@ -10,7 +10,6 @@ import android.media.ImageReader
 import android.media.MediaRecorder
 import android.os.Handler
 import android.os.HandlerThread
-import android.os.Looper.prepare
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.util.Size
@@ -134,7 +133,7 @@ class CameraSource private constructor(
     }
 
     private val onImageAvailableListener = ImageReader.OnImageAvailableListener {
-        file = SaveUtils.makeFile(activity)
+        file = SaveUtils.makeFile(activity, SaveUtils.FORMAT_PIC_FILE_NAME)
         backgroundHandler?.post(ImageSaver(it.acquireNextImage(), file))
     }
 
@@ -143,11 +142,11 @@ class CameraSource private constructor(
         textureView = newTextureView
     }
 
-    fun openCameraIfAvailable() {
-        if (textureView.isAvailable) {
-            openCamera(textureView.width, textureView.height)
+    fun openCameraIfAvailable() = with(textureView){
+        if (isAvailable) {
+            openCamera(width, height)
         } else {
-            textureView.surfaceTextureListener = surfaceTextureListener
+            surfaceTextureListener = this@CameraSource.surfaceTextureListener
         }
     }
 
@@ -168,7 +167,11 @@ class CameraSource private constructor(
     }
 
     fun swapCamera() {
-        if (cameraFace == CameraFaces.CAMERA_FRONT) {
+        if (nextVideoAbsolutePath.isNullOrEmpty()) {
+            nextVideoAbsolutePath = getVideoFilePath(activity)
+            Log.d(TAG, "nextVideoAbsolutePath: $nextVideoAbsolutePath")
+        }
+        if (isCurrentCameraFront()) {
             cameraFace = CameraFaces.CAMERA_BACK
         } else if (cameraFace == CameraFaces.CAMERA_BACK) {
             cameraFace = CameraFaces.CAMERA_FRONT
@@ -391,7 +394,6 @@ class CameraSource private constructor(
     private fun getVideoFilePath(context: Context?): String {
         val filename = "${System.currentTimeMillis()}.mp4"
         val dir = context?.getExternalFilesDir(null)
-
         return if (dir == null) {
             filename
         } else {
