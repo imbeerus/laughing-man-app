@@ -1,7 +1,6 @@
 package com.lockwood.laughingmanar.camera
 
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
 import android.content.res.Configuration
 import android.graphics.*
@@ -35,7 +34,7 @@ import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 
 class CameraSource private constructor(
-    private var activity: Activity,
+    private var activity: FragmentActivity,
     private var textureView: AutoFitTextureView
 ) {
     private var cameraDevice: CameraDevice? = null
@@ -115,24 +114,25 @@ class CameraSource private constructor(
     }
 
     private val stateCallback = object : CameraDevice.StateCallback() {
-        override fun onOpened(camera: CameraDevice) {
+
+        override fun onOpened(cameraDevice: CameraDevice) {
             cameraOpenCloseLock.release()
-            cameraDevice = camera
+            this@CameraSource.cameraDevice = cameraDevice
             createCameraPreviewSession()
             if (isVideoMode()) {
                 configureTransform(textureView.width, textureView.height)
             }
         }
 
-        override fun onDisconnected(camera: CameraDevice) {
+        override fun onDisconnected(cameraDevice: CameraDevice) {
             cameraOpenCloseLock.release()
-            camera.close()
-            cameraDevice = null
+            cameraDevice.close()
+            this@CameraSource.cameraDevice = null
         }
 
         override fun onError(cameraDevice: CameraDevice, error: Int) {
             onDisconnected(cameraDevice)
-            (activity as AppCompatActivity).finish()
+            activity.finish()
         }
     }
 
@@ -141,16 +141,16 @@ class CameraSource private constructor(
         backgroundHandler?.post(ImageSaver(it.acquireNextImage(), file))
     }
 
-    fun update(newContext: Activity, newTextureView: AutoFitTextureView) {
+    fun update(newContext: FragmentActivity, newTextureView: AutoFitTextureView) {
         activity = newContext
         textureView = newTextureView
     }
 
-    fun openCameraIfAvailable() = with(textureView) {
-        if (isAvailable) {
-            openCamera(width, height)
+    fun openCameraIfAvailable() {
+        if (textureView.isAvailable) {
+            openCamera(textureView.width, textureView.height)
         } else {
-            surfaceTextureListener = this@CameraSource.surfaceTextureListener
+            textureView.surfaceTextureListener = surfaceTextureListener
         }
     }
 
@@ -454,7 +454,7 @@ class CameraSource private constructor(
     }
 
     private fun configureTransform(viewWidth: Int, viewHeight: Int) {
-        val rotation = (activity as FragmentActivity).windowManager.defaultDisplay.rotation
+        val rotation = activity.windowManager.defaultDisplay.rotation
         val matrix = Matrix()
         val viewRect = RectF(0f, 0f, viewWidth.toFloat(), viewHeight.toFloat())
         val bufferRect = RectF(0f, 0f, previewSize.height.toFloat(), previewSize.width.toFloat())
@@ -675,7 +675,7 @@ class CameraSource private constructor(
         openCameraIfAvailable()
     }
 
-    companion object : SingletonHolder<CameraSource, Activity, AutoFitTextureView>(::CameraSource) {
+    companion object : SingletonHolder<CameraSource, FragmentActivity, AutoFitTextureView>(::CameraSource) {
         private const val MAX_PREVIEW_WIDTH = 1920
         private const val MAX_PREVIEW_HEIGHT = 1080
 
