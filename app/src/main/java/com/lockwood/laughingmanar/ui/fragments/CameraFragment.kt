@@ -20,7 +20,6 @@ import org.jetbrains.anko.cancelButton
 import org.jetbrains.anko.find
 import org.jetbrains.anko.okButton
 
-
 class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener,
     ActivityCompat.OnRequestPermissionsResultCallback {
 
@@ -32,6 +31,19 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener,
     private val gestureDetector = GestureDetectorCompat(ctx, object : GestureDetector.SimpleOnGestureListener() {
         override fun onLongPress(e: MotionEvent) {
             changCameraMode()
+        }
+
+        override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+            val deltaY = Math.abs(e1.y - e2.y)
+            if ((deltaY >= MIN_SWIPE_DISTANCE_Y) && (deltaY <= MAX_SWIPE_DISTANCE_Y)) {
+                cameraSource.swapCamera()
+                return true
+            }
+            return super.onFling(e1, e2, velocityX, velocityY)
+        }
+
+        override fun onDown(e: MotionEvent?): Boolean {
+            return true
         }
     })
 
@@ -126,6 +138,9 @@ class CameraFragment : Fragment(), View.OnClickListener, View.OnTouchListener,
     }
 
     companion object {
+        private const val MIN_SWIPE_DISTANCE_Y = 100
+        private const val MAX_SWIPE_DISTANCE_Y = 1000
+
         @JvmStatic
         fun newInstance(): CameraFragment = CameraFragment()
     }

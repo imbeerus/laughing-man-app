@@ -515,10 +515,7 @@ class CameraSource private constructor(
             // largest of those not big enough.
             return when {
                 bigEnough.size > 0 -> Collections.min(bigEnough, CompareSizesByArea())
-                notBigEnough.size > 0 -> Collections.max(
-                    notBigEnough,
-                    CompareSizesByArea()
-                )
+                notBigEnough.size > 0 -> Collections.max(notBigEnough, CompareSizesByArea())
                 else -> {
                     Log.e(TAG, "Couldn't find any suitable preview size")
                     choices[0]
