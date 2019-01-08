@@ -7,6 +7,7 @@ import android.graphics.*
 import android.hardware.camera2.*
 import android.hardware.camera2.CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP
 import android.hardware.camera2.CameraCharacteristics.SENSOR_ORIENTATION
+import android.hardware.camera2.CameraDevice.TEMPLATE_PREVIEW
 import android.hardware.camera2.CameraDevice.TEMPLATE_RECORD
 import android.media.ImageReader
 import android.media.MediaRecorder
@@ -115,7 +116,6 @@ class CameraSource private constructor(
     }
 
     private val stateCallback = object : CameraDevice.StateCallback() {
-
         override fun onOpened(cameraDevice: CameraDevice) {
             cameraOpenCloseLock.release()
             this@CameraSource.cameraDevice = cameraDevice
@@ -163,8 +163,7 @@ class CameraSource private constructor(
     fun closeCamera() {
         try {
             cameraOpenCloseLock.acquire()
-            captureSession?.close()
-            captureSession = null
+            closePreviewSession()
             cameraDevice?.close()
             cameraDevice = null
             imageReader?.close()
@@ -357,56 +356,93 @@ class CameraSource private constructor(
     }
 
     private fun createCameraPreviewSession() {
+        if (!isVideoMode()) {
+            startPhotoPreview()
+        } else {
+            startVideoPreview()
+        }
+    }
+
+    private fun startVideoPreview() {
         if (cameraDevice == null || !textureView.isAvailable) return
 
         try {
             closePreviewSession()
+            val texture = textureView.surfaceTexture
+            texture.setDefaultBufferSize(previewSize.width, previewSize.height)
+            previewRequestBuilder = cameraDevice!!.createCaptureRequest(TEMPLATE_PREVIEW)
+
+            val previewSurface = Surface(texture)
+            previewRequestBuilder.addTarget(previewSurface)
+
+            cameraDevice?.createCaptureSession(
+                listOf(previewSurface),
+                object : CameraCaptureSession.StateCallback() {
+                    override fun onConfigured(session: CameraCaptureSession) {
+                        captureSession = session
+                        updatePreview()
+                    }
+
+                    override fun onConfigureFailed(session: CameraCaptureSession) {
+                        activity.toast("Failed")
+                    }
+                }, backgroundHandler
+            )
+        } catch (e: CameraAccessException) {
+            Log.e(TAG, e.toString())
+        }
+    }
+
+    private fun startPhotoPreview() {
+        try {
             val texture = textureView.surfaceTexture
             // We configure the size of default buffer to be the size of camera preview we want.
             texture.setDefaultBufferSize(previewSize.width, previewSize.height)
             // This is the output Surface we need to start preview.
             val surface = Surface(texture)
             // We set up a CaptureRequest.Builder with the output Surface.
-            previewRequestBuilder = cameraDevice!!.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
+            previewRequestBuilder = cameraDevice!!.createCaptureRequest(
+                CameraDevice.TEMPLATE_PREVIEW
+            )
             previewRequestBuilder.addTarget(surface)
+            // Here, we create a CameraCaptureSession for camera preview.
+            cameraDevice?.createCaptureSession(
+                Arrays.asList(surface, imageReader?.surface),
+                object : CameraCaptureSession.StateCallback() {
+                    override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
+                        // The camera is already closed
+                        if (cameraDevice == null) return
+                        // When the session is ready, we start displaying the preview.
+                        captureSession = cameraCaptureSession
+                        try {
+                            // Auto focus should be continuous for camera preview.
+                            previewRequestBuilder.set(
+                                CaptureRequest.CONTROL_AF_MODE,
+                                CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE
+                            )
+                            // Flash is automatically enabled when necessary.
+                            setAutoFlash(previewRequestBuilder)
 
-            if (!isVideoMode()) {
-                // Here, we create a CameraCaptureSession for camera preview.
-                cameraDevice?.createCaptureSession(
-                    Arrays.asList(surface, imageReader?.surface),
-                    object : CameraCaptureSession.StateCallback() {
-                        override fun onConfigured(cameraCaptureSession: CameraCaptureSession) {
-                            // The camera is already closed
-                            if (cameraDevice == null) return
-                            // When the session is ready, we start displaying the preview.
-                            captureSession = cameraCaptureSession
-                            updatePreview()
+                            // Finally, we start displaying the camera preview.
+                            previewRequest = previewRequestBuilder.build()
+                            captureSession?.setRepeatingRequest(
+                                previewRequest,
+                                captureCallback, backgroundHandler
+                            )
+                        } catch (e: CameraAccessException) {
+                            Log.e(TAG, e.toString())
                         }
 
-                        override fun onConfigureFailed(session: CameraCaptureSession) {
-                            activity.toast("Failed")
-                        }
-                    }, null
-                )
-            } else {
-                cameraDevice?.createCaptureSession(
-                    listOf(surface),
-                    object : CameraCaptureSession.StateCallback() {
-                        override fun onConfigured(session: CameraCaptureSession) {
-                            captureSession = session
-                            updatePreview()
-                        }
+                    }
 
-                        override fun onConfigureFailed(session: CameraCaptureSession) {
-                            activity.toast("Failed")
-                        }
-                    }, backgroundHandler
-                )
-            }
+                    override fun onConfigureFailed(session: CameraCaptureSession) {
+                        activity.toast("Failed")
+                    }
+                }, null
+            )
         } catch (e: CameraAccessException) {
             Log.e(TAG, e.toString())
         }
-
     }
 
     private fun closePreviewSession() {
@@ -578,7 +614,7 @@ class CameraSource private constructor(
         }
         activity.toast("Video saved: $nextVideoAbsolutePath")
         nextVideoAbsolutePath = null
-        createCameraPreviewSession()
+        startVideoPreview()
     }
 
     fun startRecordingVideo() {
@@ -649,7 +685,7 @@ class CameraSource private constructor(
             }
         } else {
             try {
-                previewRequestBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
+                setUpCaptureRequestBuilder(previewRequestBuilder)
                 HandlerThread("CameraPreview").start()
                 captureSession?.setRepeatingRequest(
                     previewRequestBuilder.build(), null, backgroundHandler
@@ -658,6 +694,10 @@ class CameraSource private constructor(
                 Log.e(TAG, e.toString())
             }
         }
+    }
+
+    private fun setUpCaptureRequestBuilder(builder: CaptureRequest.Builder?) {
+        builder?.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO)
     }
 
     fun changCameraMode() {
@@ -721,7 +761,6 @@ class CameraSource private constructor(
             // Pick the smallest of those big enough. If there is no one big enough, pick the
             // largest of those not big enough.
             return when {
-                // TODO: fix find optimal size
                 bigEnough.size > 0 -> Collections.min(bigEnough, CompareSizesByArea())
                 notBigEnough.size > 0 -> Collections.max(notBigEnough, CompareSizesByArea())
                 else -> {
