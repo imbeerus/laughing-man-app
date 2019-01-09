@@ -8,7 +8,6 @@ import android.util.Log
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.ViewGroup
-import com.google.android.gms.vision.CameraSource
 import java.io.IOException
 
 /** Preview the camera image in the screen.  */
@@ -83,7 +82,7 @@ class CameraSourcePreview(context: Context, attrs: AttributeSet) : ViewGroup(con
             cameraSource!!.start()
             if (overlay != null) {
                 val size = cameraSource!!.previewSize
-                val min = Math.min(size.width, size.height)
+                val min = Math.min(size!!.width, size.height)
                 val max = Math.max(size.width, size.height)
                 if (isPortraitMode) {
                     // Swap width and height sizes when in portrait, since it will be rotated by

@@ -10,4 +10,6 @@
     <string name="intro_message">
         Hide your identity with The Laughing Man logo from Ghost in the Shell: Stand Alone Complex.
     </string>
+    <string name="desc_camera_source_activity">Vision detectors demo with live camera preview</string>
+    <string name="desc_still_image_activity">Vision detectors demo with a still image</string>
 </resources>

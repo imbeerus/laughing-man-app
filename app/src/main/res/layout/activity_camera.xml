@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/fireTopLayout"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/black"
+        android:keepScreenOn="true"
+        tools:context=".ui.CameraActivity">
+
+    <com.lockwood.laughingmanar.mlkit.CameraSourcePreview
+            android:id="@+id/cameraPreview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true">
+
+        <com.lockwood.laughingmanar.mlkit.GraphicOverlay
+                android:id="@+id/faceOverlay"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentBottom="true"/>
+    </com.lockwood.laughingmanar.mlkit.CameraSourcePreview>
+
+    <TextView android:id="@+id/text"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:paddingLeft="80dp"
+              android:textColor="#FFF"
+              android:textSize="20sp"
+              android:textStyle="bold" />
+
+    <FrameLayout
+            android:id="@+id/control"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentStart="true"
+            android:layout_toEndOf="@id/cameraPreview"
+            android:background="@android:color/black">
+
+        <ToggleButton
+                android:id="@+id/facingSwitch"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="start"
+                android:background="@drawable/swap_style"
+                android:textOff=""
+                android:textOn=""/>
+
+        <ToggleButton
+                android:id="@+id/captureButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/capture_style"
+                android:textOff=""
+                android:textOn=""
+                android:checked="false" />
+    </FrameLayout>
+</RelativeLayout>
