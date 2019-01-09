@@ -57,8 +57,7 @@ class CameraActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsR
 
     private val captureCheckedChangeListener =
         CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
-            toast("Capture")
-            // TODO("not implemented")
+            cameraPreview
         }
     
     override fun onCreate(savedInstanceState: Bundle?) {

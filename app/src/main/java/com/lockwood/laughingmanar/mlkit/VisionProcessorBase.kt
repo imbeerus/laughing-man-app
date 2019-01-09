@@ -1,14 +1,10 @@
-package com.lockwood.laughingmanar
+package com.lockwood.laughingmanar.mlkit
 
 import android.graphics.Bitmap
 import android.support.annotation.GuardedBy
 import com.google.android.gms.tasks.Task
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
-import com.lockwood.laughingmanar.mlkit.BitmapUtils
-import com.lockwood.laughingmanar.mlkit.FrameMetadata
-import com.lockwood.laughingmanar.mlkit.GraphicOverlay
-import com.lockwood.laughingmanar.mlkit.VisionImageProcessor
 import java.nio.ByteBuffer
 
 /**

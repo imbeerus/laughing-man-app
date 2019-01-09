@@ -9,7 +9,7 @@ import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.face.FirebaseVisionFace
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetector
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetectorOptions
-import com.lockwood.laughingmanar.VisionProcessorBase
+import com.lockwood.laughingmanar.mlkit.VisionProcessorBase
 import com.lockwood.laughingmanar.mlkit.CameraImageGraphic
 import com.lockwood.laughingmanar.mlkit.FrameMetadata
 import com.lockwood.laughingmanar.mlkit.GraphicOverlay

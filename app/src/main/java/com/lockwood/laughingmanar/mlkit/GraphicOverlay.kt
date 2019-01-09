@@ -119,8 +119,8 @@ class GraphicOverlay(context: Context, attrs: AttributeSet) : View(context, attr
 
         synchronized(lock) {
             if (previewWidth != 0 && previewHeight != 0) {
-                widthScaleFactor = canvas.width.toFloat() / previewWidth.toFloat()
-                heightScaleFactor = canvas.height.toFloat() / previewHeight.toFloat()
+                widthScaleFactor = width.toFloat() / previewWidth.toFloat()
+                heightScaleFactor = height.toFloat() / previewHeight.toFloat()
             }
 
             for (graphic in graphics) {
