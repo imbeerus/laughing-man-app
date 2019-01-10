@@ -16,8 +16,6 @@ class FaceGraphic(
     private val facing: Int
 ) : GraphicOverlay.Graphic(overlay) {
 
-    private val faceImage: Bitmap = BitmapFactory.decodeResource(applicationContext.resources, R.drawable.face)
-
     private val boxPaint = Paint().apply {
         color = Color.WHITE
         style = Style.STROKE
@@ -26,7 +24,8 @@ class FaceGraphic(
 
     override fun draw(canvas: Canvas) {
         val face = firebaseVisionFace ?: return
-        drawFaceBorder(face, canvas)
+//        drawFaceBorder(face, canvas)
+        drawFaceImage(face, canvas)
     }
 
     private fun drawFaceBorder(
@@ -44,8 +43,29 @@ class FaceGraphic(
         canvas.drawRect(left, top, right, bottom, boxPaint)
     }
 
+    private fun drawFaceImage(
+        face: FirebaseVisionFace,
+        canvas: Canvas
+    ) {
+        var faceBitmap: Bitmap = BitmapFactory.decodeResource(applicationContext.resources, R.drawable.face)
+        val scaleFactory = FACE_SCALE_FACTOR
+        val xOffset = (face.width * scaleFactory).toInt()
+//        val yOffset = (face.height * xOffset / face.width * scaleFactory).toInt()
+        val yOffset = (face.height * scaleFactory).toInt()
+
+        // Scale the face
+        faceBitmap = Bitmap.createScaledBitmap(faceBitmap, xOffset, yOffset, false)
+        val x = translateX(face.centerX)
+        val y = translateY(face.centerY)
+        val left = x - xOffset / 2
+        val top = y - yOffset / 2
+        // Draw it
+        canvas.drawBitmap(faceBitmap, left, top, null)
+    }
+
     companion object {
         private const val BOX_STROKE_WIDTH = 1.0f
         private const val GRAPHIC_SCALE_FACTOR = 1.5f
+        private const val FACE_SCALE_FACTOR = 3.5f
     }
 }
