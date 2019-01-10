@@ -1,6 +1,5 @@
 package com.lockwood.laughingmanar.facedetection
 
-
 import android.graphics.Bitmap
 import android.util.Log
 import com.google.android.gms.tasks.Task
@@ -9,13 +8,12 @@ import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.face.FirebaseVisionFace
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetector
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetectorOptions
-import com.lockwood.laughingmanar.mlkit.VisionProcessorBase
 import com.lockwood.laughingmanar.mlkit.CameraImageGraphic
 import com.lockwood.laughingmanar.mlkit.FrameMetadata
 import com.lockwood.laughingmanar.mlkit.GraphicOverlay
+import com.lockwood.laughingmanar.mlkit.VisionProcessorBase
 import java.io.IOException
 
-/** Face Detector Demo.  */
 class FaceDetectionProcessor : VisionProcessorBase<List<FirebaseVisionFace>>() {
 
     private val detector: FirebaseVisionFaceDetector
@@ -64,7 +62,6 @@ class FaceDetectionProcessor : VisionProcessorBase<List<FirebaseVisionFace>>() {
     }
 
     companion object {
-
         private val TAG = "FaceDetectionProcessor"
     }
 }

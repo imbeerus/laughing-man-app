@@ -1,26 +1,22 @@
 package com.lockwood.laughingmanar.facedetection
 
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
+import android.graphics.*
 import android.graphics.Paint.Style
 import com.google.firebase.ml.vision.face.FirebaseVisionFace
+import com.lockwood.laughingmanar.R
 import com.lockwood.laughingmanar.extensions.centerX
 import com.lockwood.laughingmanar.extensions.centerY
 import com.lockwood.laughingmanar.extensions.height
 import com.lockwood.laughingmanar.extensions.width
 import com.lockwood.laughingmanar.mlkit.GraphicOverlay
 
-
-/**
- * Graphic instance for rendering face position, orientation, and landmarks within an associated
- * graphic overlay view.
- */
 class FaceGraphic(
     overlay: GraphicOverlay,
     private val firebaseVisionFace: FirebaseVisionFace?,
     private val facing: Int
 ) : GraphicOverlay.Graphic(overlay) {
+
+    private val faceImage: Bitmap = BitmapFactory.decodeResource(applicationContext.resources, R.drawable.face)
 
     private val boxPaint = Paint().apply {
         color = Color.WHITE
@@ -30,8 +26,13 @@ class FaceGraphic(
 
     override fun draw(canvas: Canvas) {
         val face = firebaseVisionFace ?: return
+        drawFaceBorder(face, canvas)
+    }
 
-        // Draws a circle at the position of the detected face, with the face's track id below.
+    private fun drawFaceBorder(
+        face: FirebaseVisionFace,
+        canvas: Canvas
+    ) {
         val x = translateX(face.centerX)
         val y = translateY(face.centerY)
         val xOffset = face.width * GRAPHIC_SCALE_FACTOR

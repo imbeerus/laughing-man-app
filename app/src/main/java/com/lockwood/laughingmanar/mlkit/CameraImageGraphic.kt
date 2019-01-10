@@ -5,7 +5,6 @@ import android.graphics.Canvas
 import android.graphics.Rect
 import com.lockwood.laughingmanar.mlkit.GraphicOverlay.Graphic
 
-/** Draw camera image to background.  */
 class CameraImageGraphic(overlay: GraphicOverlay, private val bitmap: Bitmap) : Graphic(overlay) {
 
     override fun draw(canvas: Canvas) {

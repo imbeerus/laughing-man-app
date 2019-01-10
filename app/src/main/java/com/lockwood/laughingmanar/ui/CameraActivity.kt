@@ -16,7 +16,6 @@ import com.lockwood.laughingmanar.R
 import com.lockwood.laughingmanar.facedetection.FaceDetectionProcessor
 import com.lockwood.laughingmanar.mlkit.CameraSource
 import kotlinx.android.synthetic.main.activity_camera.*
-import org.jetbrains.anko.toast
 import java.io.IOException
 
 @KeepName
@@ -59,7 +58,7 @@ class CameraActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsR
         CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
             cameraPreview
         }
-    
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "onCreate")

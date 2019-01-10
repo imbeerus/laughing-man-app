@@ -7,13 +7,6 @@ import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
 import java.nio.ByteBuffer
 
-/**
- * Abstract base class for ML Kit frame processors. Subclasses need to implement {@link
- * #onSuccess(T, FrameMetadata, GraphicOverlay)} to define what they want to with the detection
- * results and {@link #detectInImage(FirebaseVisionImage)} to specify the detector object.
- *
- * @param <T> The type of the detected feature.
- */
 abstract class VisionProcessorBase<T> : VisionImageProcessor {
 
     // To keep the latest images and its metadata.
@@ -101,12 +94,6 @@ abstract class VisionProcessorBase<T> : VisionImageProcessor {
 
     protected abstract fun detectInImage(image: FirebaseVisionImage): Task<T>
 
-    /**
-     * Callback that executes with a successful detection result.
-     *
-     * @param originalCameraImage hold the original image from camera, used to draw the background
-     * image.
-     */
     protected abstract fun onSuccess(
         originalCameraImage: Bitmap?,
         results: T,

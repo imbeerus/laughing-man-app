@@ -1,9 +1,7 @@
 package com.lockwood.laughingmanar.mlkit
 
-/** Describing a frame info.  */
 class FrameMetadata private constructor(val width: Int, val height: Int, val rotation: Int, val cameraFacing: Int) {
 
-    /** Builder of [FrameMetadata].  */
     class Builder {
 
         private var width: Int = 0
