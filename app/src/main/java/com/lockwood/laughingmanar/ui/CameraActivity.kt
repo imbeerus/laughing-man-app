@@ -26,76 +26,7 @@ import org.jetbrains.anko.toast
 import java.io.IOException
 
 @KeepName
-class CameraActivity : AppCompatActivity(), View.OnClickListener, GestureDetector.OnGestureListener,
-    ActivityCompat.OnRequestPermissionsResultCallback {
-
-    private var cameraSource: CameraSource? = null
-    private var selectedModel = FACE_DETECTION
-    private var selectedMode = CameraSource.CaptureMode.PHOTO_MODE_CAPTURE
-
-    private lateinit var gestureDetector: GestureDetectorCompat
-
-    private val requiredPermissions: Array<String?>
-        get() {
-            return try {
-                val info = this.packageManager
-                    .getPackageInfo(this.packageName, PackageManager.GET_PERMISSIONS)
-                val ps = info.requestedPermissions
-                if (ps != null && ps.isNotEmpty()) {
-                    ps
-                } else {
-                    arrayOfNulls(0)
-                }
-            } catch (e: Exception) {
-                arrayOfNulls(0)
-            }
-        }
-
-    private val swapCheckedChangeListener =
-        CompoundButton.OnCheckedChangeListener { _, isChecked ->
-            Log.d(TAG, "Set facing")
-            swapCamera(isChecked)
-        }
-
-    private fun swapCamera(isChecked: Boolean) {
-        cameraSource?.let {
-            if (isChecked) {
-                it.setFacing(CameraSource.CAMERA_FACING_FRONT)
-            } else {
-                it.setFacing(CameraSource.CAMERA_FACING_BACK)
-            }
-        }
-        cameraPreview?.stop()
-        startCameraSource()
-    }
-
-    private val captureCheckedChangeListener =
-        CompoundButton.OnCheckedChangeListener { _, _ ->
-            when (selectedMode) {
-                CameraSource.CaptureMode.PHOTO_MODE_CAPTURE -> {
-                    captureButton.background = drawable(R.drawable.ic_start)
-                }
-                CameraSource.CaptureMode.VIDEO_MODE_END -> {
-                    captureButton.background = drawable(R.drawable.ic_stop)
-                    selectedMode = CameraSource.CaptureMode.VIDEO_MODE_START
-                }
-                CameraSource.CaptureMode.VIDEO_MODE_START -> {
-                    captureButton.background = drawable(R.drawable.ic_start)
-                    selectedMode = CameraSource.CaptureMode.VIDEO_MODE_END
-                }
-            }
-        }
-
-
-    private fun changCameraMode() {
-        // changCameraMode()
-        Log.d(TAG, "changCameraMode: $selectedMode")
-        selectedMode = if (selectedMode == CameraSource.CaptureMode.PHOTO_MODE_CAPTURE) {
-            CameraSource.CaptureMode.VIDEO_MODE_END
-        } else {
-            CameraSource.CaptureMode.PHOTO_MODE_CAPTURE
-        }
-    }
+class CameraActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -130,92 +61,6 @@ class CameraActivity : AppCompatActivity(), View.OnClickListener, GestureDetecto
         }
     }
 
-    private fun createCameraSource(model: String) {
-        // If there's no existing cameraSource, create one.
-        if (cameraSource == null) {
-            cameraSource = CameraSource(this, faceOverlay)
-        }
-
-        try {
-            cameraSource?.setMachineLearningFrameProcessor(FaceDetectionProcessor())
-        } catch (e: FirebaseMLException) {
-            Log.e(TAG, "can not create camera source: $model")
-        }
-    }
-
-    private fun startCameraSource() {
-        cameraSource?.let {
-            try {
-                if (cameraPreview == null) {
-                    Log.d(TAG, "resume: Preview is null")
-                }
-                if (faceOverlay == null) {
-                    Log.d(TAG, "resume: graphOverlay is null")
-                }
-                cameraPreview?.start(cameraSource!!, faceOverlay)
-            } catch (e: IOException) {
-                Log.e(TAG, "Unable to start camera source.", e)
-                cameraSource?.release()
-                cameraSource = null
-            }
-        }
-    }
-
-    public override fun onResume() {
-        super.onResume()
-        Log.d(TAG, "onResume")
-        startCameraSource()
-    }
-
-    override fun onPause() {
-        super.onPause()
-        cameraPreview?.stop()
-    }
-
-    public override fun onDestroy() {
-        super.onDestroy()
-        cameraSource?.release()
-    }
-
-    override fun onClick(view: View) {
-        when (view.id) {
-            R.id.infoButton -> {
-                alert(R.string.intro_message) {
-                    positiveButton("Results") { openResFolder() }
-                }.show()
-            }
-        }
-    }
-
-    override fun onTouchEvent(event: MotionEvent?): Boolean {
-        return if (gestureDetector.onTouchEvent(event)) {
-            true
-        } else {
-            super.onTouchEvent(event)
-        }
-    }
-
-    override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
-        val deltaY = Math.abs(e1.y - e2.y)
-        if ((deltaY >= MIN_SWIPE_DISTANCE_Y) && (deltaY <= MAX_SWIPE_DISTANCE_Y)) {
-            val isChecked = !captureButton.isChecked
-            captureButton.isChecked = isChecked
-            swapCamera(isChecked)
-        }
-        return true
-    }
-
-    override fun onLongPress(e: MotionEvent?) {
-        changCameraMode()
-    }
-
-    override fun onShowPress(e: MotionEvent?) {}
-
-    override fun onScroll(e1: MotionEvent?, e2: MotionEvent?, distanceX: Float, distanceY: Float): Boolean = true
-
-    override fun onSingleTapUp(e: MotionEvent?): Boolean = true
-
-    override fun onDown(e: MotionEvent?): Boolean = true
 
     private fun allPermissionsGranted(): Boolean {
         for (permission in requiredPermissions) {
@@ -254,12 +99,8 @@ class CameraActivity : AppCompatActivity(), View.OnClickListener, GestureDetecto
     }
 
     companion object {
-        private const val FACE_DETECTION = "Face Detection"
         private const val TAG = "CameraActivity"
         private const val PERMISSION_REQUESTS = 1
-
-        private const val MIN_SWIPE_DISTANCE_Y = 100
-        private const val MAX_SWIPE_DISTANCE_Y = 1000
 
         private fun isPermissionGranted(context: Context, permission: String): Boolean {
             if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {
