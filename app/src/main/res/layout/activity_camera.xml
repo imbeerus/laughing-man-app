@@ -2,55 +2,71 @@
 <RelativeLayout
         xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/fireTopLayout"
-        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@android:color/black"
+        android:background="@color/indigo_500"
         android:keepScreenOn="true"
         tools:context=".ui.CameraActivity">
+
+    <FrameLayout
+            android:id="@+id/controlTop"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/frame_height"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"/>
 
     <com.lockwood.laughingmanar.mlkit.CameraSourcePreview
             android:id="@+id/cameraPreview"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true">
+            android:layout_marginTop="@dimen/frame_height"
+            android:layout_marginBottom="@dimen/frame_height"
+            android:layout_alignParentStart="true">
 
         <com.lockwood.laughingmanar.mlkit.GraphicOverlay
                 android:id="@+id/faceOverlay"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_alignParentStart="true"
-                android:layout_alignParentTop="true"
-                android:layout_alignParentBottom="true"/>
+                android:layout_alignParentTop="true"/>
     </com.lockwood.laughingmanar.mlkit.CameraSourcePreview>
 
     <FrameLayout
-            android:id="@+id/control"
+            android:id="@+id/controlBottom"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
+            android:layout_height="@dimen/frame_height"
+            android:layout_marginBottom="@dimen/activity_vertical_margin"
             android:layout_alignParentBottom="true"
-            android:layout_alignParentStart="true"
-            android:layout_toEndOf="@id/cameraPreview"
-            android:background="@android:color/black">
+            android:layout_alignParentStart="true">
 
         <ToggleButton
                 android:id="@+id/facingSwitch"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_gravity="start"
+                android:layout_width="@dimen/camera_button_small_size"
+                android:layout_height="@dimen/camera_button_small_size"
                 android:background="@drawable/swap_style"
                 android:textOff=""
-                android:textOn=""/>
+                android:textOn=""
+                android:layout_gravity="center_vertical|start"
+                style="@style/AppTheme.CameraButton"/>
 
         <ToggleButton
                 android:id="@+id/captureButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_gravity="center_horizontal"
+                android:layout_width="@dimen/camera_button_big_size"
+                android:layout_height="@dimen/camera_button_big_size"
                 android:background="@drawable/capture_style"
                 android:textOff=""
                 android:textOn=""
-                android:checked="false"/>
+                android:checked="false"
+                android:layout_gravity="center"
+                style="@style/AppTheme.CameraButton"/>
+
+        <ImageButton
+                android:id="@+id/info"
+                android:src="@drawable/ic_info"
+                android:layout_width="@dimen/camera_button_small_size"
+                android:layout_height="@dimen/camera_button_small_size"
+                android:layout_gravity="center_vertical|end"
+                android:contentDescription="@string/description_info"
+                style="@style/AppTheme.CameraButton"/>
     </FrameLayout>
 </RelativeLayout>

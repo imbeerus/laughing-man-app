@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="frame_height">64dp</dimen>
-    <dimen name="image_button_padding">20dp</dimen>
+    <dimen name="camera_button_padding">20dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="camera_button_small_size">24dp</dimen>
+    <dimen name="camera_button_big_size">42dp</dimen>
 </resources>

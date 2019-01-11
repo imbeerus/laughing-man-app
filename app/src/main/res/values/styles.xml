@@ -8,7 +8,8 @@
 
     <style name="AppTheme.CameraButton" parent="android:Widget.Holo.Button.Borderless">
         <item name="colorPrimary">@color/indigo_500</item>
-        android:padding="@dimen/image_button_padding"
-        android:background="?android:attr/selectableItemBackground"
+        <item name="android:layout_marginStart">@dimen/camera_button_padding</item>
+        <item name="android:layout_marginEnd">@dimen/camera_button_padding</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
     </style>
 </resources>
