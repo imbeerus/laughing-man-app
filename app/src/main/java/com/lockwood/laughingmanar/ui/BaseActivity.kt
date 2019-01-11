@@ -45,18 +45,7 @@ abstract class BaseActivity : AppCompatActivity(),
                 arrayOfNulls(0)
             }
         }
-
-    protected val captureCheckedChangeListener =
-        CompoundButton.OnCheckedChangeListener { _, _ ->
-            captureWithMode(selectedMode)
-        }
-
-    protected val swapCheckedChangeListener =
-        CompoundButton.OnCheckedChangeListener { _, isChecked ->
-            Log.d(TAG, "Set facing")
-            swapCamera(isChecked)
-        }
-
+    
     public override fun onResume() {
         super.onResume()
         Log.d(TAG, "onResume")
@@ -75,6 +64,8 @@ abstract class BaseActivity : AppCompatActivity(),
 
     override fun onClick(view: View) {
         when (view.id) {
+            R.id.facingSwitch -> swapCamera()
+            R.id.captureButton -> capture()
             R.id.infoButton -> {
                 alert(R.string.intro_message) {
                     positiveButton("Results") { openResFolder() }
@@ -93,7 +84,7 @@ abstract class BaseActivity : AppCompatActivity(),
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
-            captureWithMode(selectedMode)
+            capture()
             return true
         }
         return super.onKeyDown(keyCode, event)
@@ -102,9 +93,7 @@ abstract class BaseActivity : AppCompatActivity(),
     override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
         val deltaY = Math.abs(e1.y - e2.y)
         if ((deltaY >= MIN_SWIPE_DISTANCE_Y) && (deltaY <= MAX_SWIPE_DISTANCE_Y)) {
-            val isChecked = !captureButton.isChecked
-            captureButton.isChecked = isChecked
-            swapCamera(isChecked)
+            swapCamera()
         }
         return true
     }
@@ -118,8 +107,8 @@ abstract class BaseActivity : AppCompatActivity(),
     override fun onSingleTapUp(e: MotionEvent?): Boolean = true
     override fun onDown(e: MotionEvent?): Boolean = true
 
-    private fun captureWithMode(mode: CameraSource.CaptureMode) {
-        when (mode) {
+    private fun capture() {
+        when (selectedMode) {
             CameraSource.CaptureMode.PHOTO_MODE_CAPTURE -> {
                 toast("capture")
                 captureButton.background = drawable(R.drawable.ic_start)
@@ -137,13 +126,11 @@ abstract class BaseActivity : AppCompatActivity(),
         }
     }
 
-    private fun swapCamera(isChecked: Boolean) {
-        cameraSource?.let {
-            if (isChecked) {
-                it.setFacing(CameraSource.CAMERA_FACING_FRONT)
-            } else {
-                it.setFacing(CameraSource.CAMERA_FACING_BACK)
-            }
+    private fun swapCamera() = with(cameraSource) {
+        if (this!!.cameraFacing == CameraSource.CAMERA_FACING_BACK) {
+            this.setFacing(CameraSource.CAMERA_FACING_FRONT)
+        } else {
+            this.setFacing(CameraSource.CAMERA_FACING_BACK)
         }
         cameraPreview?.stop()
         startCameraSource()

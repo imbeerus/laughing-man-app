@@ -39,32 +39,29 @@
             android:layout_alignParentBottom="true"
             android:layout_alignParentStart="true">
 
-        <ToggleButton
+        <ImageButton
                 android:id="@+id/facingSwitch"
-                android:layout_width="@dimen/camera_button_small_size"
-                android:layout_height="@dimen/camera_button_small_size"
-                android:background="@drawable/swap_style"
-                android:textOff=""
-                android:textOn=""
+                android:src="@drawable/ic_swap"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical|start"
+                android:contentDescription="@string/description_swap"
                 style="@style/AppTheme.CameraButton"/>
 
-        <ToggleButton
+        <ImageButton
                 android:id="@+id/captureButton"
+                android:src="@drawable/ic_start"
                 android:layout_width="@dimen/camera_button_big_size"
                 android:layout_height="@dimen/camera_button_big_size"
-                android:background="@drawable/capture_style"
-                android:textOff=""
-                android:textOn=""
-                android:checked="false"
                 android:layout_gravity="center"
+                android:contentDescription="@string/description_capture"
                 style="@style/AppTheme.CameraButton"/>
 
         <ImageButton
                 android:id="@+id/infoButton"
                 android:src="@drawable/ic_info"
-                android:layout_width="@dimen/camera_button_small_size"
-                android:layout_height="@dimen/camera_button_small_size"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical|end"
                 android:contentDescription="@string/description_info"
                 style="@style/AppTheme.CameraButton"/>

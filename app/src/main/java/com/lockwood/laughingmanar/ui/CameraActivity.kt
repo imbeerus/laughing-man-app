@@ -32,15 +32,14 @@ class CameraActivity : BaseActivity() {
 
         gestureDetector = GestureDetectorCompat(this, this)
 
+        captureButton.setOnClickListener(this)
+        infoButton.setOnClickListener(this)
+        facingSwitch.setOnClickListener(this)
         val facingSwitch = facingSwitch
-        facingSwitch.setOnCheckedChangeListener(swapCheckedChangeListener)
         // Hide the toggle button if there is only 1 camera
         if (Camera.getNumberOfCameras() == 1) {
             facingSwitch.visibility = View.GONE
         }
-
-        captureButton.setOnCheckedChangeListener(captureCheckedChangeListener)
-        infoButton.setOnClickListener(this)
 
         if (allPermissionsGranted()) {
             createCameraSource(selectedModel)
