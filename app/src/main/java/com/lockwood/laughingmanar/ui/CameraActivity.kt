@@ -7,23 +7,11 @@ import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v4.view.GestureDetectorCompat
-import android.support.v7.app.AppCompatActivity
 import android.util.Log
-import android.view.GestureDetector
-import android.view.MotionEvent
 import android.view.View
-import android.widget.CompoundButton
 import com.google.android.gms.common.annotation.KeepName
-import com.google.firebase.ml.common.FirebaseMLException
 import com.lockwood.laughingmanar.R
-import com.lockwood.laughingmanar.extensions.drawable
-import com.lockwood.laughingmanar.extensions.openResFolder
-import com.lockwood.laughingmanar.facedetection.FaceDetectionProcessor
-import com.lockwood.laughingmanar.mlkit.CameraSource
 import kotlinx.android.synthetic.main.activity_camera.*
-import org.jetbrains.anko.alert
-import org.jetbrains.anko.toast
-import java.io.IOException
 
 @KeepName
 class CameraActivity : BaseActivity() {

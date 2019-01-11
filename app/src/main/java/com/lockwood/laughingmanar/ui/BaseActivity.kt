@@ -1,13 +1,12 @@
 package com.lockwood.laughingmanar.ui
 
-import android.content.Context
 import android.content.pm.PackageManager
 import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
 import android.support.v4.view.GestureDetectorCompat
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.GestureDetector
+import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.widget.CompoundButton
@@ -19,6 +18,7 @@ import com.lockwood.laughingmanar.facedetection.FaceDetectionProcessor
 import com.lockwood.laughingmanar.mlkit.CameraSource
 import kotlinx.android.synthetic.main.activity_camera.*
 import org.jetbrains.anko.alert
+import org.jetbrains.anko.toast
 import java.io.IOException
 
 abstract class BaseActivity : AppCompatActivity(),
@@ -48,19 +48,7 @@ abstract class BaseActivity : AppCompatActivity(),
 
     protected val captureCheckedChangeListener =
         CompoundButton.OnCheckedChangeListener { _, _ ->
-            when (selectedMode) {
-                CameraSource.CaptureMode.PHOTO_MODE_CAPTURE -> {
-                    captureButton.background = drawable(R.drawable.ic_start)
-                }
-                CameraSource.CaptureMode.VIDEO_MODE_END -> {
-                    captureButton.background = drawable(R.drawable.ic_stop)
-                    selectedMode = CameraSource.CaptureMode.VIDEO_MODE_START
-                }
-                CameraSource.CaptureMode.VIDEO_MODE_START -> {
-                    captureButton.background = drawable(R.drawable.ic_start)
-                    selectedMode = CameraSource.CaptureMode.VIDEO_MODE_END
-                }
-            }
+            captureWithMode(selectedMode)
         }
 
     protected val swapCheckedChangeListener =
@@ -103,6 +91,14 @@ abstract class BaseActivity : AppCompatActivity(),
         }
     }
 
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_VOLUME_DOWN || keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+            captureWithMode(selectedMode)
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
     override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
         val deltaY = Math.abs(e1.y - e2.y)
         if ((deltaY >= MIN_SWIPE_DISTANCE_Y) && (deltaY <= MAX_SWIPE_DISTANCE_Y)) {
@@ -121,6 +117,25 @@ abstract class BaseActivity : AppCompatActivity(),
     override fun onScroll(e1: MotionEvent?, e2: MotionEvent?, distanceX: Float, distanceY: Float): Boolean = true
     override fun onSingleTapUp(e: MotionEvent?): Boolean = true
     override fun onDown(e: MotionEvent?): Boolean = true
+
+    private fun captureWithMode(mode: CameraSource.CaptureMode) {
+        when (mode) {
+            CameraSource.CaptureMode.PHOTO_MODE_CAPTURE -> {
+                toast("capture")
+                captureButton.background = drawable(R.drawable.ic_start)
+            }
+            CameraSource.CaptureMode.VIDEO_MODE_END -> {
+                toast("start record")
+                captureButton.background = drawable(R.drawable.ic_stop)
+                selectedMode = CameraSource.CaptureMode.VIDEO_MODE_START
+            }
+            CameraSource.CaptureMode.VIDEO_MODE_START -> {
+                toast("end record")
+                captureButton.background = drawable(R.drawable.ic_start)
+                selectedMode = CameraSource.CaptureMode.VIDEO_MODE_END
+            }
+        }
+    }
 
     private fun swapCamera(isChecked: Boolean) {
         cameraSource?.let {
@@ -174,7 +189,6 @@ abstract class BaseActivity : AppCompatActivity(),
             Log.e(TAG, "can not create camera source: $model")
         }
     }
-
 
     companion object {
         private const val FACE_DETECTION = "Face Detection"
