@@ -11,7 +11,6 @@ import android.view.ViewGroup
 import java.io.IOException
 
 
-/** Preview the camera image in the screen.  */
 class CameraSourcePreview(context: Context, attrs: AttributeSet) : ViewGroup(context, attrs) {
     private val surfaceView: SurfaceView
     private var startRequested: Boolean = false

@@ -6,23 +6,34 @@ import android.hardware.Camera
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
+import android.support.v4.view.GestureDetectorCompat
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.View
 import android.widget.CompoundButton
 import com.google.android.gms.common.annotation.KeepName
 import com.google.firebase.ml.common.FirebaseMLException
 import com.lockwood.laughingmanar.R
+import com.lockwood.laughingmanar.extensions.drawable
+import com.lockwood.laughingmanar.extensions.openResFolder
 import com.lockwood.laughingmanar.facedetection.FaceDetectionProcessor
 import com.lockwood.laughingmanar.mlkit.CameraSource
 import kotlinx.android.synthetic.main.activity_camera.*
+import org.jetbrains.anko.alert
+import org.jetbrains.anko.toast
 import java.io.IOException
 
 @KeepName
-class CameraActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsResultCallback {
+class CameraActivity : AppCompatActivity(), View.OnClickListener, GestureDetector.OnGestureListener,
+    ActivityCompat.OnRequestPermissionsResultCallback {
 
     private var cameraSource: CameraSource? = null
     private var selectedModel = FACE_DETECTION
+    private var selectedMode = CameraSource.CaptureMode.PHOTO_MODE_CAPTURE
+
+    private lateinit var gestureDetector: GestureDetectorCompat
 
     private val requiredPermissions: Array<String?>
         get() {
@@ -41,7 +52,7 @@ class CameraActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsR
         }
 
     private val swapCheckedChangeListener =
-        CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
+        CompoundButton.OnCheckedChangeListener { _, isChecked ->
             Log.d(TAG, "Set facing")
             cameraSource?.let {
                 if (isChecked) {
@@ -55,9 +66,32 @@ class CameraActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsR
         }
 
     private val captureCheckedChangeListener =
-        CompoundButton.OnCheckedChangeListener { buttonView, isChecked ->
-            cameraPreview
+        CompoundButton.OnCheckedChangeListener { _, isChecked ->
+            when (selectedMode) {
+                CameraSource.CaptureMode.PHOTO_MODE_CAPTURE -> {
+                    captureButton.background = drawable(R.drawable.ic_start)
+                }
+                CameraSource.CaptureMode.VIDEO_MODE_END -> {
+                    captureButton.background = drawable(R.drawable.ic_stop)
+                    selectedMode = CameraSource.CaptureMode.VIDEO_MODE_START
+                }
+                CameraSource.CaptureMode.VIDEO_MODE_START -> {
+                    captureButton.background = drawable(R.drawable.ic_start)
+                    selectedMode = CameraSource.CaptureMode.VIDEO_MODE_END
+                }
+            }
         }
+
+
+    private fun changCameraMode() {
+        // changCameraMode()
+        Log.d(TAG, "changCameraMode: $selectedMode")
+        selectedMode = if (selectedMode == CameraSource.CaptureMode.PHOTO_MODE_CAPTURE) {
+            CameraSource.CaptureMode.VIDEO_MODE_END
+        } else {
+            CameraSource.CaptureMode.PHOTO_MODE_CAPTURE
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,6 +107,8 @@ class CameraActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsR
             Log.d(TAG, "graphicOverlay is null")
         }
 
+        gestureDetector = GestureDetectorCompat(this, this)
+
         val facingSwitch = facingSwitch
         facingSwitch.setOnCheckedChangeListener(swapCheckedChangeListener)
         // Hide the toggle button if there is only 1 camera
@@ -81,6 +117,7 @@ class CameraActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsR
         }
 
         captureButton.setOnCheckedChangeListener(captureCheckedChangeListener)
+        infoButton.setOnClickListener(this)
 
         if (allPermissionsGranted()) {
             createCameraSource(selectedModel)
@@ -136,6 +173,44 @@ class CameraActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsR
         cameraSource?.release()
     }
 
+    override fun onClick(view: View) {
+        when (view.id) {
+            R.id.infoButton -> {
+                alert(R.string.intro_message) {
+                    positiveButton("Results") { openResFolder() }
+                }.show()
+            }
+        }
+    }
+
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        return if (gestureDetector.onTouchEvent(event)) {
+            true
+        } else {
+            super.onTouchEvent(event)
+        }
+    }
+
+    override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+        val deltaY = Math.abs(e1.y - e2.y)
+        if ((deltaY >= MIN_SWIPE_DISTANCE_Y) && (deltaY <= MAX_SWIPE_DISTANCE_Y)) {
+//         TODO:  cameraSource.swapCamera()
+        }
+        return true
+    }
+
+    override fun onLongPress(e: MotionEvent?) {
+        changCameraMode()
+    }
+
+    override fun onShowPress(e: MotionEvent?) {}
+
+    override fun onScroll(e1: MotionEvent?, e2: MotionEvent?, distanceX: Float, distanceY: Float): Boolean = true
+
+    override fun onSingleTapUp(e: MotionEvent?): Boolean = true
+
+    override fun onDown(e: MotionEvent?): Boolean = true
+
     private fun allPermissionsGranted(): Boolean {
         for (permission in requiredPermissions) {
             if (!isPermissionGranted(this, permission!!)) {
@@ -176,6 +251,9 @@ class CameraActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsR
         private const val FACE_DETECTION = "Face Detection"
         private const val TAG = "CameraActivity"
         private const val PERMISSION_REQUESTS = 1
+
+        private const val MIN_SWIPE_DISTANCE_Y = 100
+        private const val MAX_SWIPE_DISTANCE_Y = 1000
 
         private fun isPermissionGranted(context: Context, permission: String): Boolean {
             if (ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED) {

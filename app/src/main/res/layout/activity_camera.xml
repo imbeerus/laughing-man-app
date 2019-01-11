@@ -61,7 +61,7 @@
                 style="@style/AppTheme.CameraButton"/>
 
         <ImageButton
-                android:id="@+id/info"
+                android:id="@+id/infoButton"
                 android:src="@drawable/ic_info"
                 android:layout_width="@dimen/camera_button_small_size"
                 android:layout_height="@dimen/camera_button_small_size"

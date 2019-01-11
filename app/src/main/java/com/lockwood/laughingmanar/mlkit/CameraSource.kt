@@ -245,11 +245,10 @@ open class CameraSource(
         previewSize: android.hardware.Camera.Size,
         pictureSize: android.hardware.Camera.Size?
     ) {
-        private val preview: Size
+        private val preview: Size = Size(previewSize.width, previewSize.height)
         private var picture: Size? = null
 
         init {
-            preview = Size(previewSize.width, previewSize.height)
             if (pictureSize != null) {
                 picture = Size(pictureSize.width, pictureSize.height)
             }
@@ -547,5 +546,13 @@ open class CameraSource(
             }
             return selectedFpsRange
         }
+    }
+
+    enum class CaptureMode(private val str: String) {
+        VIDEO_MODE_START("VIDEO MODE START"),
+        VIDEO_MODE_END("VIDEO MODE END"),
+        PHOTO_MODE_CAPTURE("PHOTO MODE CAPTURE");
+
+        override fun toString(): String = str
     }
 }
