@@ -54,19 +54,23 @@ class CameraActivity : AppCompatActivity(), View.OnClickListener, GestureDetecto
     private val swapCheckedChangeListener =
         CompoundButton.OnCheckedChangeListener { _, isChecked ->
             Log.d(TAG, "Set facing")
-            cameraSource?.let {
-                if (isChecked) {
-                    it.setFacing(CameraSource.CAMERA_FACING_FRONT)
-                } else {
-                    it.setFacing(CameraSource.CAMERA_FACING_BACK)
-                }
-            }
-            cameraPreview?.stop()
-            startCameraSource()
+            swapCamera(isChecked)
         }
 
+    private fun swapCamera(isChecked: Boolean) {
+        cameraSource?.let {
+            if (isChecked) {
+                it.setFacing(CameraSource.CAMERA_FACING_FRONT)
+            } else {
+                it.setFacing(CameraSource.CAMERA_FACING_BACK)
+            }
+        }
+        cameraPreview?.stop()
+        startCameraSource()
+    }
+
     private val captureCheckedChangeListener =
-        CompoundButton.OnCheckedChangeListener { _, isChecked ->
+        CompoundButton.OnCheckedChangeListener { _, _ ->
             when (selectedMode) {
                 CameraSource.CaptureMode.PHOTO_MODE_CAPTURE -> {
                     captureButton.background = drawable(R.drawable.ic_start)
@@ -194,7 +198,9 @@ class CameraActivity : AppCompatActivity(), View.OnClickListener, GestureDetecto
     override fun onFling(e1: MotionEvent, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
         val deltaY = Math.abs(e1.y - e2.y)
         if ((deltaY >= MIN_SWIPE_DISTANCE_Y) && (deltaY <= MAX_SWIPE_DISTANCE_Y)) {
-//         TODO:  cameraSource.swapCamera()
+            val isChecked = !captureButton.isChecked
+            captureButton.isChecked = isChecked
+            swapCamera(isChecked)
         }
         return true
     }
