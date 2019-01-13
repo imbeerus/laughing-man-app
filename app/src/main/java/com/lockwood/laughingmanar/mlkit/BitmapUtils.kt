@@ -1,11 +1,6 @@
 package com.lockwood.laughingmanar.mlkit
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.ImageFormat
-import android.graphics.Matrix
-import android.graphics.Rect
-import android.graphics.YuvImage
+import android.graphics.*
 import android.hardware.Camera.CameraInfo
 import android.util.Log
 import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata
@@ -54,9 +49,19 @@ object BitmapUtils {
         return if (facing == CameraInfo.CAMERA_FACING_BACK) {
             Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
         } else {
-            // Mirror the image along X axis for front-facing camera image.
+            // Mirror the image a  long X axis for front-facing camera image.
             matrix.postScale(-1.0f, 1.0f)
             Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
         }
     }
+
+    fun translateX(x: Float, widthScaleFactor: Float, width: Float, isFacingFront: Boolean): Float {
+        return if (isFacingFront) {
+            width - (x * widthScaleFactor)
+        } else {
+            x * widthScaleFactor
+        }
+    }
+
+    fun translateY(y: Float, heightScaleFactor: Float): Float = y * heightScaleFactor
 }

@@ -19,30 +19,21 @@ class GraphicOverlay(context: Context, attrs: AttributeSet) : View(context, attr
 
     abstract class Graphic(private val overlay: GraphicOverlay) {
 
-        val applicationContext: Context
+        val appContext: Context
             get() = overlay.ctx.applicationContext
 
         abstract fun draw(canvas: Canvas)
 
-        fun scaleX(horizontal: Float): Float {
-            return horizontal * overlay.widthScaleFactor
+        fun translateX(x: Float): Float = with(overlay) {
+            return@with BitmapUtils.translateX(
+                x,
+                widthScaleFactor,
+                width.toFloat(),
+                facing == CameraSource.CAMERA_FACING_FRONT
+            )
         }
 
-        fun scaleY(vertical: Float): Float {
-            return vertical * overlay.heightScaleFactor
-        }
-
-        fun translateX(x: Float): Float {
-            return if (overlay.facing == CameraSource.CAMERA_FACING_FRONT) {
-                overlay.width - scaleX(x)
-            } else {
-                scaleX(x)
-            }
-        }
-
-        fun translateY(y: Float): Float {
-            return scaleY(y)
-        }
+        fun translateY(y: Float): Float = BitmapUtils.translateY(y, overlay.heightScaleFactor)
 
         fun postInvalidate() {
             overlay.postInvalidate()
@@ -83,8 +74,8 @@ class GraphicOverlay(context: Context, attrs: AttributeSet) : View(context, attr
 
         synchronized(lock) {
             if (previewWidth != 0 && previewHeight != 0) {
-                widthScaleFactor = width.toFloat() / previewWidth.toFloat()
-                heightScaleFactor = height.toFloat() / previewHeight.toFloat()
+                widthScaleFactor = (width / previewWidth).toFloat()
+                heightScaleFactor = (height / previewHeight).toFloat()
             }
 
             for (graphic in graphics) {

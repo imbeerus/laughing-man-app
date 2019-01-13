@@ -9,7 +9,6 @@ import android.view.GestureDetector
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
-import android.widget.CompoundButton
 import com.google.firebase.ml.common.FirebaseMLException
 import com.lockwood.laughingmanar.R
 import com.lockwood.laughingmanar.extensions.drawable
@@ -18,7 +17,6 @@ import com.lockwood.laughingmanar.facedetection.FaceDetectionProcessor
 import com.lockwood.laughingmanar.mlkit.CameraSource
 import kotlinx.android.synthetic.main.activity_camera.*
 import org.jetbrains.anko.alert
-import org.jetbrains.anko.toast
 import java.io.IOException
 
 abstract class BaseActivity : AppCompatActivity(),
@@ -45,7 +43,7 @@ abstract class BaseActivity : AppCompatActivity(),
                 arrayOfNulls(0)
             }
         }
-    
+
     public override fun onResume() {
         super.onResume()
         Log.d(TAG, "onResume")
@@ -65,7 +63,7 @@ abstract class BaseActivity : AppCompatActivity(),
     override fun onClick(view: View) {
         when (view.id) {
             R.id.facingSwitch -> swapCamera()
-            R.id.captureButton -> capture()
+            R.id.captureButton -> cameraSource?.capture()
             R.id.infoButton -> {
                 alert(R.string.intro_message) {
                     positiveButton("Results") { openResFolder() }
@@ -110,20 +108,18 @@ abstract class BaseActivity : AppCompatActivity(),
     private fun capture() {
         when (selectedMode) {
             CameraSource.CaptureMode.PHOTO_MODE_CAPTURE -> {
-                toast("capture")
                 captureButton.background = drawable(R.drawable.ic_start)
             }
             CameraSource.CaptureMode.VIDEO_MODE_END -> {
-                toast("start record")
                 captureButton.background = drawable(R.drawable.ic_stop)
                 selectedMode = CameraSource.CaptureMode.VIDEO_MODE_START
             }
             CameraSource.CaptureMode.VIDEO_MODE_START -> {
-                toast("end record")
                 captureButton.background = drawable(R.drawable.ic_start)
                 selectedMode = CameraSource.CaptureMode.VIDEO_MODE_END
             }
         }
+        Log.d(TAG, "changCameraMode: $selectedMode")
     }
 
     private fun swapCamera() = with(cameraSource) {
@@ -156,7 +152,6 @@ abstract class BaseActivity : AppCompatActivity(),
 
     private fun changCameraMode() {
         // changCameraMode()
-        Log.d(TAG, "changCameraMode: $selectedMode")
         selectedMode = if (selectedMode == CameraSource.CaptureMode.PHOTO_MODE_CAPTURE) {
             CameraSource.CaptureMode.VIDEO_MODE_END
         } else {

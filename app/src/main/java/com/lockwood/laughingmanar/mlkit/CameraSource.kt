@@ -4,19 +4,25 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.ImageFormat
 import android.graphics.SurfaceTexture
 import android.hardware.Camera
 import android.hardware.Camera.CameraInfo
+import android.net.Uri
+import android.os.Environment
 import android.support.annotation.RequiresPermission
 import android.util.Log
 import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.WindowManager
 import com.google.android.gms.common.images.Size
-import java.io.IOException
+import org.jetbrains.anko.toast
+import java.io.*
 import java.lang.Thread.State
 import java.nio.ByteBuffer
+import java.text.SimpleDateFormat
 import java.util.*
 
 @SuppressLint("MissingPermission")
@@ -34,6 +40,76 @@ open class CameraSource(
 
     var previewSize: Size? = null
         private set
+
+    private val mPicture = Camera.PictureCallback { data, _ ->
+        val pictureFile: File = getOutputMediaFile(MEDIA_TYPE_IMAGE) ?: run {
+            Log.d(TAG, ("Error creating media file, check storage permissions"))
+            return@PictureCallback
+        }
+
+        val bitmap = BitmapFactory.decodeByteArray(data, 0, data.size)
+
+        val stream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+        val byteArray = stream.toByteArray()
+        // TODO: add faces
+        val resultData = byteArray
+        try {
+            val fos = FileOutputStream(pictureFile)
+            fos.write(resultData)
+            fos.close()
+        } catch (e: FileNotFoundException) {
+            Log.d(TAG, "File not found: ${e.message}")
+        } catch (e: IOException) {
+            Log.d(TAG, "Error accessing file: ${e.message}")
+        }
+    }
+
+    fun capture() {
+        camera?.takePicture(null, null, mPicture)
+    }
+
+    private fun getOutputMediaFileUri(type: Int): Uri {
+        return Uri.fromFile(getOutputMediaFile(type))
+    }
+
+    private fun getOutputMediaFile(type: Int): File? {
+        // To be safe, you should check that the SDCard is mounted
+        // using Environment.getExternalStorageState() before doing this.
+
+        val mediaStorageDir = File(
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+            "TheLaughingMan"
+        )
+        // This location works best if you want the created images to be shared
+        // between applications and persist after your app has been uninstalled.
+
+        // Create the storage directory if it does not exist
+        mediaStorageDir.apply {
+            if (!exists()) {
+                if (!mkdirs()) {
+                    Log.d("TheLaughingMan", "failed to create directory")
+                    return null
+                }
+            }
+        }
+
+        // Create a media file name
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.ENGLISH).format(Date())
+        return when (type) {
+            MEDIA_TYPE_IMAGE -> {
+                val path = "${mediaStorageDir.path}${File.separator}IMG_$timeStamp.jpg"
+                activity.toast("photo saved to $path")
+                File(path)
+            }
+            MEDIA_TYPE_VIDEO -> {
+                val path = "${mediaStorageDir.path}${File.separator}VID_$timeStamp.mp4"
+                activity.toast("video saved to $path")
+                File(path)
+            }
+            else -> null
+        }
+    }
 
     // These values may be requested by the caller.  Due to hardware limitations, we may need to
     // select close, but not exactly the same values for these.
@@ -443,6 +519,10 @@ open class CameraSource(
     }
 
     companion object {
+
+        val MEDIA_TYPE_IMAGE = 1
+        val MEDIA_TYPE_VIDEO = 2
+
         @SuppressLint("InlinedApi")
         val CAMERA_FACING_BACK = CameraInfo.CAMERA_FACING_BACK
 
@@ -555,4 +635,5 @@ open class CameraSource(
 
         override fun toString(): String = str
     }
+
 }
