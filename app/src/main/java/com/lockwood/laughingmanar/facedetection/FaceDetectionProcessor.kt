@@ -20,7 +20,9 @@ class FaceDetectionProcessor : VisionProcessorBase<List<FirebaseVisionFace>>() {
 
     init {
         val options = FirebaseVisionFaceDetectorOptions.Builder()
-            .setClassificationMode(FirebaseVisionFaceDetectorOptions.ALL_CLASSIFICATIONS)
+            .setClassificationMode(FirebaseVisionFaceDetectorOptions.NO_CLASSIFICATIONS)
+            .setContourMode(FirebaseVisionFaceDetectorOptions.NO_CONTOURS)
+            .setLandmarkMode(FirebaseVisionFaceDetectorOptions.NO_LANDMARKS)
             .build()
 
         detector = FirebaseVision.getInstance().getVisionFaceDetector(options)

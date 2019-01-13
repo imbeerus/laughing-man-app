@@ -18,6 +18,9 @@ import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.WindowManager
 import com.google.android.gms.common.images.Size
+import com.lockwood.laughingmanar.facedetection.FaceUtils
+import com.lockwood.laughingmanar.facedetection.ImageType
+import kotlinx.android.synthetic.main.activity_camera.*
 import org.jetbrains.anko.toast
 import java.io.*
 import java.lang.Thread.State
@@ -47,16 +50,17 @@ open class CameraSource(
             return@PictureCallback
         }
 
-        val bitmap = BitmapFactory.decodeByteArray(data, 0, data.size)
+        val isFacingFront = cameraFacing == CameraSource.CAMERA_FACING_FRONT
+        var bitmap = BitmapFactory.decodeByteArray(data, 0, data.size)
+        bitmap = FaceUtils.detectFacesAndOverlayImage(bitmap, ImageType.STATIC_PNG, isFacingFront)
 
         val stream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-        val byteArray = stream.toByteArray()
-        // TODO: add faces
-        val resultData = byteArray
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        val resultByteArray = stream.toByteArray()
+
         try {
             val fos = FileOutputStream(pictureFile)
-            fos.write(resultData)
+            fos.write(resultByteArray)
             fos.close()
         } catch (e: FileNotFoundException) {
             Log.d(TAG, "File not found: ${e.message}")

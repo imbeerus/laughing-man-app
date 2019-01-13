@@ -63,7 +63,7 @@ abstract class BaseActivity : AppCompatActivity(),
     override fun onClick(view: View) {
         when (view.id) {
             R.id.facingSwitch -> swapCamera()
-            R.id.captureButton -> cameraSource?.capture()
+            R.id.captureButton -> capture()
             R.id.infoButton -> {
                 alert(R.string.intro_message) {
                     positiveButton("Results") { openResFolder() }
@@ -109,6 +109,7 @@ abstract class BaseActivity : AppCompatActivity(),
         when (selectedMode) {
             CameraSource.CaptureMode.PHOTO_MODE_CAPTURE -> {
                 captureButton.background = drawable(R.drawable.ic_start)
+                cameraSource?.capture()
             }
             CameraSource.CaptureMode.VIDEO_MODE_END -> {
                 captureButton.background = drawable(R.drawable.ic_stop)
