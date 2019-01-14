@@ -5,36 +5,31 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import com.google.firebase.ml.vision.FirebaseVision
+import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.face.FirebaseVisionFace
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetector
-import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetectorOptions
 
 object FaceUtils {
 
     const val TAG = "FaceUtils"
 
-    fun detectFacesAndOverlayImage(picture: Bitmap, overlayType: OverlayType, isFacingFront: Boolean): Bitmap {
-        // Create the face detector, disable tracking and enable classifications
-        val options = FirebaseVisionFaceDetectorOptions.Builder()
-            .setClassificationMode(FirebaseVisionFaceDetectorOptions.NO_CLASSIFICATIONS)
-            .setContourMode(FirebaseVisionFaceDetectorOptions.NO_CONTOURS)
-            .setLandmarkMode(FirebaseVisionFaceDetectorOptions.NO_LANDMARKS)
-            .build()
-        val faceDetector: FirebaseVisionFaceDetector = FirebaseVision.getInstance().getVisionFaceDetector(options)
-        
+    fun detectFacesAndOverlayImage(
+        picture: Bitmap,
+        overlayType: OverlayType,
+        isFacingFront: Boolean,
+        onResult: (Bitmap) -> Unit
+    ) {
+        val faceDetector: FirebaseVisionFaceDetector = FirebaseVision.getInstance().visionFaceDetector
         // Initialize result bitmap to original picture
         var resultBitmap = picture
-
-//        val detectFaces = faceDetector.detectInImage(FirebaseVisionImage.fromBitmap(picture))
-//        if (detectFaces.isComplete && detectFaces.isSuccessful) {
-//            detectFaces.result?.forEach { face ->
-//                 Add the faceBitmap to the proper position in the original image
-//                resultBitmap = addBitmapToFace(resultBitmap, face, OverlayType.STATIC_PNG, isFacingFront)
-//            }
-//        }
-
-        faceDetector.close()
-        return resultBitmap
+        val detectFaces = faceDetector.detectInImage(FirebaseVisionImage.fromBitmap(picture))
+        detectFaces.addOnSuccessListener {
+            it.forEach { face ->
+                // Add the faceBitmap to the proper position in the original image
+                resultBitmap = addBitmapToFace(resultBitmap, face, overlayType, isFacingFront)
+            }
+            onResult(resultBitmap)
+        }
     }
 
     private fun addBitmapToFace(

@@ -43,29 +43,31 @@ open class CameraSource(
     var previewSize: Size? = null
         private set
 
-    private val mPicture = Camera.PictureCallback { data, _ ->
+    private val mPicture = Camera.PictureCallback { data, camera ->
         val pictureFile: File = getOutputMediaFile(MEDIA_TYPE_IMAGE) ?: run {
             Log.d(TAG, ("Error creating media file, check storage permissions"))
             return@PictureCallback
         }
 
         val isFacingFront = cameraFacing == CameraSource.CAMERA_FACING_FRONT
-        var bitmap = BitmapFactory.decodeByteArray(data, 0, data.size)
-        bitmap = FaceUtils.detectFacesAndOverlayImage(bitmap, OverlayType.STATIC_PNG, isFacingFront)
+        val bitmap = BitmapFactory.decodeByteArray(data, 0, data.size)
+        FaceUtils.detectFacesAndOverlayImage(bitmap, OverlayType.STATIC_PNG, isFacingFront) { resultBitmap ->
+            val stream = ByteArrayOutputStream()
+            resultBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            val resultByteArray = stream.toByteArray()
+            resultBitmap.recycle()
 
-        val stream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-        val resultByteArray = stream.toByteArray()
-
-        try {
-            val fos = FileOutputStream(pictureFile)
-            fos.write(resultByteArray)
-            fos.close()
-        } catch (e: FileNotFoundException) {
-            Log.d(TAG, "File not found: ${e.message}")
-        } catch (e: IOException) {
-            Log.d(TAG, "Error accessing file: ${e.message}")
+            try {
+                val fos = FileOutputStream(pictureFile)
+                fos.write(resultByteArray)
+                fos.close()
+            } catch (e: FileNotFoundException) {
+                Log.d(TAG, "File not found: ${e.message}")
+            } catch (e: IOException) {
+                Log.d(TAG, "Error accessing file: ${e.message}")
+            }
         }
+        camera.startPreview()
     }
 
     fun capture() {
@@ -116,7 +118,7 @@ open class CameraSource(
 
     // These values may be requested by the caller.  Due to hardware limitations, we may need to
     // select close, but not exactly the same values for these.
-    private val requestedFps = 20.0f
+    private val requestedFps = 30.0f
     private val requestedPreviewWidth = 480
     private val requestedPreviewHeight = 360
     private val requestedAutoFocus = true

@@ -7,7 +7,6 @@ import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.face.FirebaseVisionFace
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetector
-import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetectorOptions
 import com.lockwood.laughingmanar.mlkit.CameraImageGraphic
 import com.lockwood.laughingmanar.mlkit.FrameMetadata
 import com.lockwood.laughingmanar.mlkit.GraphicOverlay
@@ -16,17 +15,7 @@ import java.io.IOException
 
 class FaceDetectionProcessor : VisionProcessorBase<List<FirebaseVisionFace>>() {
 
-    private val detector: FirebaseVisionFaceDetector
-
-    init {
-        val options = FirebaseVisionFaceDetectorOptions.Builder()
-            .setClassificationMode(FirebaseVisionFaceDetectorOptions.NO_CLASSIFICATIONS)
-            .setContourMode(FirebaseVisionFaceDetectorOptions.NO_CONTOURS)
-            .setLandmarkMode(FirebaseVisionFaceDetectorOptions.NO_LANDMARKS)
-            .build()
-
-        detector = FirebaseVision.getInstance().getVisionFaceDetector(options)
-    }
+    private val detector: FirebaseVisionFaceDetector = FirebaseVision.getInstance().visionFaceDetector
 
     override fun stop() {
         try {
