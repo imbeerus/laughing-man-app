@@ -53,7 +53,7 @@ open class CameraSource(
         val bitmap = BitmapFactory.decodeByteArray(data, 0, data.size)
         FaceUtils.detectFacesAndOverlayImage(bitmap, OverlayType.STATIC_PNG, isFacingFront) { resultBitmap ->
             val stream = ByteArrayOutputStream()
-            resultBitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            resultBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
             val resultByteArray = stream.toByteArray()
             resultBitmap.recycle()
 
@@ -70,6 +70,7 @@ open class CameraSource(
         camera.startPreview()
     }
 
+    // TODO: fix calling capture twice
     fun capture() {
         camera?.takePicture(null, null, mPicture)
     }
@@ -266,20 +267,18 @@ open class CameraSource(
             throw IOException("Could not find requested camera.")
         }
         val camera = Camera.open(requestedCameraId)
+        val parameters = camera.parameters
+        // TODO: add support to select picture resolution
+        val highRes = parameters.supportedPictureSizes[2]
 
         val sizePair = selectSizePair(camera, requestedPreviewWidth, requestedPreviewHeight)
             ?: throw IOException("Could not find suitable preview size.")
-        val pictureSize = sizePair.pictureSize()
         previewSize = sizePair.previewSize()
 
         val previewFpsRange = selectPreviewFpsRange(camera, requestedFps)
             ?: throw IOException("Could not find suitable preview frames per second range.")
 
-        val parameters = camera.parameters
-
-        if (pictureSize != null) {
-            parameters.setPictureSize(pictureSize.width, pictureSize.height)
-        }
+        parameters.setPictureSize(highRes.width, highRes.height)
         parameters.setPreviewSize(previewSize!!.width, previewSize!!.height)
         parameters.setPreviewFpsRange(
             previewFpsRange[Camera.Parameters.PREVIEW_FPS_MIN_INDEX],
