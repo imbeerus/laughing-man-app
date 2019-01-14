@@ -286,6 +286,7 @@ open class CameraSource(
             previewFpsRange[Camera.Parameters.PREVIEW_FPS_MAX_INDEX]
         )
         parameters.previewFormat = ImageFormat.NV21
+        parameters.jpegQuality = 100
 
         setRotation(camera, parameters, requestedCameraId)
 

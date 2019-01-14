@@ -1,8 +1,6 @@
 package com.lockwood.laughingmanar.facedetection
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.Canvas
+import android.graphics.*
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.face.FirebaseVisionFace
@@ -10,11 +8,19 @@ import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetector
 import com.lockwood.laughingmanar.App
 import com.lockwood.laughingmanar.extensions.*
 import com.lockwood.laughingmanar.mlkit.BitmapUtils
+import com.lockwood.laughingmanar.mlkit.BitmapUtils.translateX
+import com.lockwood.laughingmanar.mlkit.BitmapUtils.translateY
 import com.lockwood.laughingmanar.mlkit.CameraSource
 
 object FaceUtils {
 
     const val TAG = "FaceUtils"
+
+    private val boxPaint = Paint().apply {
+        color = Color.WHITE
+        style = Paint.Style.STROKE
+        strokeWidth = 1.0f
+    }
 
     fun detectFacesAndOverlayImage(
         picture: Bitmap,
@@ -33,7 +39,7 @@ object FaceUtils {
         detectFaces.addOnSuccessListener {
             it.forEach { face ->
                 // Add the faceBitmap to the proper position in the original image
-                resultBitmap = addBitmapToFace(resultBitmap, face, overlayType)
+                resultBitmap = addBitmapToFace(resultBitmap, face, overlayType, isFacingFront)
             }
             onResult(resultBitmap)
         }
@@ -42,13 +48,14 @@ object FaceUtils {
     private fun addBitmapToFace(
         originBitmap: Bitmap,
         face: FirebaseVisionFace,
-        overlayType: OverlayType
+        overlayType: OverlayType,
+        isFacingFront: Boolean
     ): Bitmap {
         val context = App.instance.applicationContext
         val res = App.instance.resources
         // Initialize the results bitmap to be a mutable copy of the original image
         val resultBitmap = Bitmap.createBitmap(originBitmap.width, originBitmap.height, originBitmap.config)
-        val scaleFactor = 1.25f
+        val scaleFactor = 1.2f
         val resId = overlayType.resId
 
         // Create the canvas and draw the bitmaps to it
@@ -56,15 +63,17 @@ object FaceUtils {
         canvas.drawBitmap(originBitmap, 0f, 0f, null)
         when (overlayType) {
             OverlayType.STATIC_PNG -> {
-                var overlayBitmap = BitmapFactory.decodeResource(res, resId)
-                // Determine the size of the overlay to match the width of the face and preserve aspect ratio
-                val newOverlayWidth = (face.width * scaleFactor).toInt()
-                val newOverlayHeight = (face.height * newOverlayWidth / face.width * scaleFactor).toInt()
-                // Scale the overlay
-                overlayBitmap = Bitmap.createScaledBitmap(overlayBitmap, newOverlayWidth, newOverlayHeight, false)
-                // Determine the overlay position so it best lines up with the face
-                val left = face.x + face.width / 2 - overlayBitmap.width / 2
-                val top = face.y + face.height / 2 - overlayBitmap.height / 2
+                // static image
+                var overlayBitmap: Bitmap = BitmapFactory.decodeResource(res, resId)
+                val xOffset = face.width * scaleFactor
+                val yOffset = face.height * scaleFactor
+                // Scale the face
+                overlayBitmap = Bitmap.createScaledBitmap(overlayBitmap, xOffset.toInt(), yOffset.toInt(), false)
+                val x = translateX(face.centerX, 1.0f, canvas.width.toFloat(), isFacingFront)
+                val y = translateY(face.centerY, 1.0f)
+                val left = x - xOffset / 2
+                val top = y - yOffset / 2
+                // Draw it
                 canvas.drawBitmap(overlayBitmap, left, top, null)
             }
             OverlayType.STATIC_SVG -> {

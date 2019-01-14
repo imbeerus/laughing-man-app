@@ -45,20 +45,20 @@ class FaceGraphic(
         face: FirebaseVisionFace,
         canvas: Canvas
     ) {
-        val scaleFactory = selectedImageType.scaleFactory
+        val scaleFactor = selectedImageType.scaleFactory
         val resId = selectedImageType.resId
         when (selectedImageType) {
             OverlayType.STATIC_PNG -> {
                 // static image
                 var faceBitmap: Bitmap = BitmapFactory.decodeResource(appContext.resources, resId)
-                val xOffset = (face.width * scaleFactory).toInt()
-                val yOffset = (face.height * scaleFactory).toInt()
+                val xOffset = (face.width * scaleFactor).toInt()
+                val yOffset = (face.height * scaleFactor).toInt()
                 // Scale the face
                 faceBitmap = Bitmap.createScaledBitmap(faceBitmap, xOffset, yOffset, false)
                 val x = translateX(face.centerX)
                 val y = translateY(face.centerY)
-                val left = x - xOffset / 2
-                val top = y - yOffset / 2
+                val left = x - xOffset / 2.0f
+                val top = y - yOffset / 2.0f
                 // Draw it
                 canvas.drawBitmap(faceBitmap, left, top, null)
             }
@@ -66,8 +66,8 @@ class FaceGraphic(
                 val drawable = appContext.drawable(resId)
                 val x = translateX(face.centerX)
                 val y = translateY(face.centerY)
-                val xOffset = face.width * scaleFactory
-                val yOffset = face.height * scaleFactory
+                val xOffset = face.width * scaleFactor
+                val yOffset = face.height * scaleFactor
                 val left = (x - xOffset).toInt()
                 val top = (y - yOffset).toInt()
                 val right = (x + xOffset).toInt()
