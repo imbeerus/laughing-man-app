@@ -12,7 +12,7 @@ class FaceGraphic(
     private val facing: Int
 ) : GraphicOverlay.Graphic(overlay) {
 
-    private val selectedImageType = ImageType.STATIC_PNG
+    private val selectedImageType = OverlayType.STATIC_PNG
 
     private val boxPaint = Paint().apply {
         color = Color.WHITE
@@ -48,7 +48,7 @@ class FaceGraphic(
         val scaleFactory = selectedImageType.scaleFactory
         val resId = selectedImageType.resId
         when (selectedImageType) {
-            ImageType.STATIC_PNG -> {
+            OverlayType.STATIC_PNG -> {
                 // static image
                 var faceBitmap: Bitmap = BitmapFactory.decodeResource(appContext.resources, resId)
                 val xOffset = (face.width * scaleFactory).toInt()
@@ -62,7 +62,7 @@ class FaceGraphic(
                 // Draw it
                 canvas.drawBitmap(faceBitmap, left, top, null)
             }
-            ImageType.STATIC_SVG -> {
+            OverlayType.STATIC_SVG -> {
                 val drawable = appContext.drawable(resId)
                 val x = translateX(face.centerX)
                 val y = translateY(face.centerY)
@@ -77,10 +77,10 @@ class FaceGraphic(
                     it.draw(canvas)
                 }
             }
-            ImageType.ANIMATED_GIF -> {
+            OverlayType.ANIMATED_GIF -> {
 
             }
-            ImageType.ANIMATED_SVG -> {
+            OverlayType.ANIMATED_SVG -> {
 
             }
         }

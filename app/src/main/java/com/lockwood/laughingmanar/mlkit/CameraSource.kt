@@ -19,8 +19,7 @@ import android.view.SurfaceHolder
 import android.view.WindowManager
 import com.google.android.gms.common.images.Size
 import com.lockwood.laughingmanar.facedetection.FaceUtils
-import com.lockwood.laughingmanar.facedetection.ImageType
-import kotlinx.android.synthetic.main.activity_camera.*
+import com.lockwood.laughingmanar.facedetection.OverlayType
 import org.jetbrains.anko.toast
 import java.io.*
 import java.lang.Thread.State
@@ -52,10 +51,10 @@ open class CameraSource(
 
         val isFacingFront = cameraFacing == CameraSource.CAMERA_FACING_FRONT
         var bitmap = BitmapFactory.decodeByteArray(data, 0, data.size)
-        bitmap = FaceUtils.detectFacesAndOverlayImage(bitmap, ImageType.STATIC_PNG, isFacingFront)
+        bitmap = FaceUtils.detectFacesAndOverlayImage(bitmap, OverlayType.STATIC_PNG, isFacingFront)
 
         val stream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
         val resultByteArray = stream.toByteArray()
 
         try {

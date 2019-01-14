@@ -108,15 +108,15 @@ abstract class BaseActivity : AppCompatActivity(),
     private fun capture() {
         when (selectedMode) {
             CameraSource.CaptureMode.PHOTO_MODE_CAPTURE -> {
-                captureButton.background = drawable(R.drawable.ic_start)
+                captureButton.setImageResource(R.drawable.ic_start)
                 cameraSource?.capture()
             }
             CameraSource.CaptureMode.VIDEO_MODE_END -> {
-                captureButton.background = drawable(R.drawable.ic_stop)
+                captureButton.setImageResource(R.drawable.ic_stop)
                 selectedMode = CameraSource.CaptureMode.VIDEO_MODE_START
             }
             CameraSource.CaptureMode.VIDEO_MODE_START -> {
-                captureButton.background = drawable(R.drawable.ic_start)
+                captureButton.setImageResource(R.drawable.ic_start)
                 selectedMode = CameraSource.CaptureMode.VIDEO_MODE_END
             }
         }

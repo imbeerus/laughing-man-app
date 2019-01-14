@@ -53,6 +53,8 @@
                 android:src="@drawable/ic_start"
                 android:layout_width="@dimen/camera_button_big_size"
                 android:layout_height="@dimen/camera_button_big_size"
+                android:scaleX="1.75"
+                android:scaleY="1.75"
                 android:layout_gravity="center"
                 android:contentDescription="@string/description_capture"
                 style="@style/AppTheme.CameraButton"/>

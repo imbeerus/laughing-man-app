@@ -5,18 +5,15 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import com.google.firebase.ml.vision.FirebaseVision
-import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.face.FirebaseVisionFace
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetector
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetectorOptions
-import com.lockwood.laughingmanar.App
-import org.jetbrains.anko.toast
 
 object FaceUtils {
 
     const val TAG = "FaceUtils"
 
-    fun detectFacesAndOverlayImage(picture: Bitmap, imageType: ImageType, isFacingFront: Boolean): Bitmap {
+    fun detectFacesAndOverlayImage(picture: Bitmap, overlayType: OverlayType, isFacingFront: Boolean): Bitmap {
         // Create the face detector, disable tracking and enable classifications
         val options = FirebaseVisionFaceDetectorOptions.Builder()
             .setClassificationMode(FirebaseVisionFaceDetectorOptions.NO_CLASSIFICATIONS)
@@ -24,31 +21,18 @@ object FaceUtils {
             .setLandmarkMode(FirebaseVisionFaceDetectorOptions.NO_LANDMARKS)
             .build()
         val faceDetector: FirebaseVisionFaceDetector = FirebaseVision.getInstance().getVisionFaceDetector(options)
-
-
+        
         // Initialize result bitmap to original picture
         var resultBitmap = picture
 
-        val detectFaces = faceDetector.detectInImage(FirebaseVisionImage.fromBitmap(picture))
-        if (detectFaces.isComplete && detectFaces.isSuccessful) {
-            App.instance.applicationContext.toast("isSuccessful")
-            detectFaces.result?.forEach { face ->
-                // Add the faceBitmap to the proper position in the original image
-                resultBitmap = addBitmapToFace(resultBitmap, face, ImageType.STATIC_PNG, isFacingFront)
-            }
-        }
-
-//        faces.result {
-//            var faceBitmap: Bitmap
-//            it.forEach { face ->
-//                // Initialize the results bitmap to be a mutable copy of the original image
-//                faceBitmap = Bitmap.createBitmap(originalBitmap.width, originalBitmap.height, originalBitmap.config)
-//                // Init the canvas for draw the bitmaps to it
-
-//
+//        val detectFaces = faceDetector.detectInImage(FirebaseVisionImage.fromBitmap(picture))
+//        if (detectFaces.isComplete && detectFaces.isSuccessful) {
+//            detectFaces.result?.forEach { face ->
+//                 Add the faceBitmap to the proper position in the original image
+//                resultBitmap = addBitmapToFace(resultBitmap, face, OverlayType.STATIC_PNG, isFacingFront)
 //            }
-
 //        }
+
         faceDetector.close()
         return resultBitmap
     }
@@ -56,13 +40,13 @@ object FaceUtils {
     private fun addBitmapToFace(
         originBitmap: Bitmap,
         face: FirebaseVisionFace,
-        imageType: ImageType,
+        overlayType: OverlayType,
         isFacingFront: Boolean
     ): Bitmap {
         // Initialize the results bitmap to be a mutable copy of the original image
         val resultBitmap = Bitmap.createBitmap(originBitmap.width, originBitmap.height, originBitmap.config)
-        var scaleFactor = imageType.scaleFactory
-        var resId = imageType.resId
+        var scaleFactor = overlayType.scaleFactory
+        var resId = overlayType.resId
 
         val idPaint = Paint()
         idPaint.color = Color.WHITE
