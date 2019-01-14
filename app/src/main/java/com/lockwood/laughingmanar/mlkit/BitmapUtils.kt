@@ -33,7 +33,7 @@ object BitmapUtils {
     }
 
     // Rotates a bitmap if it is converted from a bytebuffer.
-    private fun rotateBitmap(bitmap: Bitmap, rotation: Int, facing: Int): Bitmap {
+    fun rotateBitmap(bitmap: Bitmap, rotation: Int, facing: Int): Bitmap {
         val matrix = Matrix()
         var rotationDegree = 0
         when (rotation) {

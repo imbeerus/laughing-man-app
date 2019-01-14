@@ -2,6 +2,12 @@ package com.lockwood.laughingmanar.extensions
 
 import com.google.firebase.ml.vision.face.FirebaseVisionFace
 
+val FirebaseVisionFace.x: Float
+    get() = boundingBox.left.toFloat()
+
+val FirebaseVisionFace.y: Float
+    get() = boundingBox.top.toFloat()
+
 val FirebaseVisionFace.centerX: Float
     get() = boundingBox.centerX().toFloat()
 

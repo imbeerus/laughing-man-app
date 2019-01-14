@@ -10,12 +10,13 @@ import java.util.*
 
 class GraphicOverlay(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private val lock = Any()
-    private var previewWidth: Int = 0
-    private var widthScaleFactor = 1.0f
-    private var previewHeight: Int = 0
-    private var heightScaleFactor = 1.0f
     private var facing = CameraSource.CAMERA_FACING_BACK
     private val graphics = ArrayList<Graphic>()
+
+    var widthScaleFactor = 1.0f
+    var heightScaleFactor = 1.0f
+    var previewWidth: Int = 0
+    var previewHeight: Int = 0
 
     abstract class Graphic(private val overlay: GraphicOverlay) {
 
