@@ -5,6 +5,7 @@ Hide your identity with The Laughing Man logo from Ghost in the Shell: Stand Alo
 [![Download](https://img.shields.io/badge/Download-v.1.0.0-blue.svg)](https://github.com/lndmflngs/laughing-man-app/releases/latest)
 
 ## Screenshots
+<img src="https://github.com/lndmflngs/laughing-man-app/blob/master/screenshots/result.gif?raw=true"/>
 
 ## Support
 If you want to support the the project or show your appreciation feel free to **[buy me a coffee / donate](https://www.paypal.me/kekc1304/1)**
