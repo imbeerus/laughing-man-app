@@ -57,6 +57,7 @@ open class CameraSource(
             val resultByteArray = stream.toByteArray()
             resultBitmap.recycle()
 
+            // TODO: add saved image to gallery
             try {
                 val fos = FileOutputStream(pictureFile)
                 fos.write(resultByteArray)
@@ -66,8 +67,8 @@ open class CameraSource(
             } catch (e: IOException) {
                 Log.d(TAG, "Error accessing file: ${e.message}")
             }
+            camera.startPreview()
         }
-        camera.startPreview()
     }
 
     // TODO: fix calling capture twice
