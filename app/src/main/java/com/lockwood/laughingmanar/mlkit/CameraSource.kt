@@ -18,6 +18,7 @@ import android.view.Surface
 import android.view.SurfaceHolder
 import android.view.WindowManager
 import com.google.android.gms.common.images.Size
+import com.lockwood.laughingmanar.extensions.galleryAddPic
 import com.lockwood.laughingmanar.facedetection.FaceUtils
 import com.lockwood.laughingmanar.facedetection.OverlayType
 import org.jetbrains.anko.toast
@@ -39,6 +40,7 @@ open class CameraSource(
         protected set
 
     private var rotation: Int = 0
+    private var isBusy: Boolean = false
 
     var previewSize: Size? = null
         private set
@@ -57,23 +59,26 @@ open class CameraSource(
             val resultByteArray = stream.toByteArray()
             resultBitmap.recycle()
 
-            // TODO: add saved image to gallery
             try {
                 val fos = FileOutputStream(pictureFile)
                 fos.write(resultByteArray)
                 fos.close()
+                activity.galleryAddPic(pictureFile)
             } catch (e: FileNotFoundException) {
                 Log.d(TAG, "File not found: ${e.message}")
             } catch (e: IOException) {
                 Log.d(TAG, "Error accessing file: ${e.message}")
             }
+            isBusy = false
             camera.startPreview()
         }
     }
 
-    // TODO: fix calling capture twice
     fun capture() {
-        camera?.takePicture(null, null, mPicture)
+        if (!isBusy) {
+            isBusy = true
+            camera?.takePicture(null, null, mPicture)
+        }
     }
 
     private fun getOutputMediaFileUri(type: Int): Uri {

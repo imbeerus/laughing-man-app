@@ -41,6 +41,7 @@ object FaceUtils {
                 // Add the faceBitmap to the proper position in the original image
                 resultBitmap = addBitmapToFace(resultBitmap, face, overlayType, isFacingFront)
             }
+            faceDetector.close()
             onResult(resultBitmap)
         }
     }
