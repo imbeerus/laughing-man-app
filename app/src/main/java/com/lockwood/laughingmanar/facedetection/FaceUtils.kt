@@ -1,6 +1,8 @@
 package com.lockwood.laughingmanar.facedetection
 
-import android.graphics.*
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
 import com.google.firebase.ml.vision.FirebaseVision
 import com.google.firebase.ml.vision.common.FirebaseVisionImage
 import com.google.firebase.ml.vision.face.FirebaseVisionFace
@@ -14,13 +16,7 @@ import com.lockwood.laughingmanar.mlkit.CameraSource
 
 object FaceUtils {
 
-    const val TAG = "FaceUtils"
-
-    private val boxPaint = Paint().apply {
-        color = Color.WHITE
-        style = Paint.Style.STROKE
-        strokeWidth = 1.0f
-    }
+    private const val TAG = "FaceUtils"
 
     fun detectFacesAndOverlayImage(
         picture: Bitmap,

@@ -19,9 +19,9 @@ import android.view.SurfaceHolder
 import android.view.WindowManager
 import com.google.android.gms.common.images.Size
 import com.lockwood.laughingmanar.extensions.galleryAddPic
+import com.lockwood.laughingmanar.extensions.toast
 import com.lockwood.laughingmanar.facedetection.FaceUtils
 import com.lockwood.laughingmanar.facedetection.OverlayType
-import org.jetbrains.anko.toast
 import java.io.*
 import java.lang.Thread.State
 import java.nio.ByteBuffer
@@ -30,20 +30,16 @@ import java.util.*
 
 @SuppressLint("MissingPermission")
 open class CameraSource(
-    protected var activity: Activity,
+    private var activity: Activity,
     private val graphicOverlay: GraphicOverlay
 ) {
 
     private var camera: Camera? = null
-
-    var cameraFacing = CAMERA_FACING_BACK
-        protected set
-
     private var rotation: Int = 0
     private var isBusy: Boolean = false
-
     var previewSize: Size? = null
-        private set
+
+    var cameraFacing = CAMERA_FACING_BACK
 
     private val mPicture = Camera.PictureCallback { data, camera ->
         val pictureFile: File = getOutputMediaFile(MEDIA_TYPE_IMAGE) ?: run {
@@ -81,18 +77,12 @@ open class CameraSource(
         }
     }
 
-    private fun getOutputMediaFileUri(type: Int): Uri {
-        return Uri.fromFile(getOutputMediaFile(type))
-    }
-
     private fun getOutputMediaFile(type: Int): File? {
         // To be safe, you should check that the SDCard is mounted
         // using Environment.getExternalStorageState() before doing this.
 
-        val mediaStorageDir = File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-            "TheLaughingMan"
-        )
+        val mediaStorageDir =
+            File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), FOLDER_NAME)
         // This location works best if you want the created images to be shared
         // between applications and persist after your app has been uninstalled.
 
@@ -100,7 +90,7 @@ open class CameraSource(
         mediaStorageDir.apply {
             if (!exists()) {
                 if (!mkdirs()) {
-                    Log.d("TheLaughingMan", "failed to create directory")
+                    Log.d(TAG, "failed to create directory $FOLDER_NAME")
                     return null
                 }
             }
@@ -344,10 +334,6 @@ open class CameraSource(
         internal fun previewSize(): Size {
             return preview
         }
-
-        internal fun pictureSize(): Size? {
-            return picture
-        }
     }
 
     private fun setRotation(camera: Camera, parameters: Camera.Parameters, cameraId: Int) {
@@ -453,7 +439,7 @@ open class CameraSource(
                 if (!bytesToByteBuffer.containsKey(data)) {
                     Log.d(
                         TAG,
-                        "Skipping frame. Could not find ByteBuffer associated with the image " + "data from the camera."
+                        "Skipping frame. Could not find ByteBuffer associated with the image data from the camera."
                     )
                     return
                 }
@@ -531,8 +517,8 @@ open class CameraSource(
 
     companion object {
 
-        val MEDIA_TYPE_IMAGE = 1
-        val MEDIA_TYPE_VIDEO = 2
+        private const val MEDIA_TYPE_IMAGE = 1
+        private const val MEDIA_TYPE_VIDEO = 2
 
         @SuppressLint("InlinedApi")
         val CAMERA_FACING_BACK = CameraInfo.CAMERA_FACING_BACK
@@ -540,11 +526,12 @@ open class CameraSource(
         @SuppressLint("InlinedApi")
         val CAMERA_FACING_FRONT = CameraInfo.CAMERA_FACING_FRONT
 
-        private val TAG = "MIDemoApp:CameraSource"
+        private const val TAG = "CameraSource"
+        private const val FOLDER_NAME = "TheLaughingMan"
 
-        private val DUMMY_TEXTURE_NAME = 100
+        private const val DUMMY_TEXTURE_NAME = 100
 
-        private val ASPECT_RATIO_TOLERANCE = 0.01f
+        private const val ASPECT_RATIO_TOLERANCE = 0.01f
 
         private fun getIdForRequestedCamera(facing: Int): Int {
             val cameraInfo = CameraInfo()
@@ -637,14 +624,6 @@ open class CameraSource(
             }
             return selectedFpsRange
         }
-    }
-
-    enum class CaptureMode(private val str: String) {
-        VIDEO_MODE_START("VIDEO MODE START"),
-        VIDEO_MODE_END("VIDEO MODE END"),
-        PHOTO_MODE_CAPTURE("PHOTO MODE CAPTURE");
-
-        override fun toString(): String = str
     }
 
 }

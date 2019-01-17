@@ -16,6 +16,8 @@ import kotlinx.android.synthetic.main.activity_camera.*
 @KeepName
 class CameraActivity : BaseActivity() {
 
+    private val actionButtons = arrayOf(R.id.captureButton, R.id.facingButton, R.id.infoButton)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d(TAG, "onCreate")
@@ -32,13 +34,11 @@ class CameraActivity : BaseActivity() {
 
         gestureDetector = GestureDetectorCompat(this, this)
 
-        captureButton.setOnClickListener(this)
-        infoButton.setOnClickListener(this)
-        facingSwitch.setOnClickListener(this)
-        val facingSwitch = facingSwitch
+        actionButtons.forEach { it-> findViewById<View>(it).setOnClickListener(this) }
+
         // Hide the toggle button if there is only 1 camera
         if (Camera.getNumberOfCameras() == 1) {
-            facingSwitch.visibility = View.GONE
+            facingButton.visibility = View.GONE
         }
 
         if (allPermissionsGranted()) {
