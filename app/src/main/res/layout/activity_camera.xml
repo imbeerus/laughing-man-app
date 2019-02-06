@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout
-        xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools"
+        xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/fireTopLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -41,7 +42,7 @@
 
         <ImageButton
                 android:id="@+id/facingButton"
-                android:src="@drawable/ic_swap"
+                app:srcCompat="@drawable/ic_swap"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical|start"
@@ -50,7 +51,7 @@
 
         <ImageButton
                 android:id="@+id/captureButton"
-                android:src="@drawable/ic_start"
+                app:srcCompat="@drawable/ic_start"
                 android:layout_width="@dimen/camera_button_big_size"
                 android:layout_height="@dimen/camera_button_big_size"
                 android:scaleX="1.75"
@@ -61,7 +62,7 @@
 
         <ImageButton
                 android:id="@+id/infoButton"
-                android:src="@drawable/ic_info"
+                app:srcCompat="@drawable/ic_info"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical|end"

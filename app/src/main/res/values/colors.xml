@@ -2,7 +2,6 @@
 <resources>
     <color name="indigo_500">#3F51B5</color>
     <color name="indigo_700">#303F9F</color>
-    <color name="indigo_transparent_500">#773F51B5</color>
     <color name="pink_a_200">#FF4081</color>
     <color name="blue_grey_100">#cfd8dc</color>
     <color name="man_background">#cfd8dc</color>

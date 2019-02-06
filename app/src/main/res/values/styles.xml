@@ -6,10 +6,10 @@
         <item name="android:windowFullscreen">true</item>
     </style>
 
-    <style name="AppTheme.CameraButton" parent="android:Widget.Holo.Button.Borderless">
+    <style name="AppTheme.CameraButton" parent="Widget.AppCompat.Button.Borderless">
         <item name="colorPrimary">@color/indigo_500</item>
         <item name="android:layout_marginStart">@dimen/camera_button_padding</item>
         <item name="android:layout_marginEnd">@dimen/camera_button_padding</item>
-        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="background">?attr/selectableItemBackground</item>
     </style>
 </resources>

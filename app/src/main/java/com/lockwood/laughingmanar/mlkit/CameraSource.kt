@@ -2,7 +2,7 @@ package com.lockwood.laughingmanar.mlkit
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
+import android.support.v7.app.AppCompatActivity
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -10,7 +10,6 @@ import android.graphics.ImageFormat
 import android.graphics.SurfaceTexture
 import android.hardware.Camera
 import android.hardware.Camera.CameraInfo
-import android.net.Uri
 import android.os.Environment
 import android.support.annotation.RequiresPermission
 import android.util.Log
@@ -30,7 +29,7 @@ import java.util.*
 
 @SuppressLint("MissingPermission")
 open class CameraSource(
-    private var activity: Activity,
+    private var activity: AppCompatActivity,
     private val graphicOverlay: GraphicOverlay
 ) {
 
