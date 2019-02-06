@@ -1,6 +1,6 @@
 package com.lockwood.laughingmanar.extensions
 
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.content.Intent
 import android.net.Uri
 import android.os.Environment

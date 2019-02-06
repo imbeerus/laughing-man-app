@@ -2,7 +2,7 @@ package com.lockwood.laughingmanar.mlkit
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -11,7 +11,7 @@ import android.graphics.SurfaceTexture
 import android.hardware.Camera
 import android.hardware.Camera.CameraInfo
 import android.os.Environment
-import android.support.annotation.RequiresPermission
+import androidx.annotation.RequiresPermission
 import android.util.Log
 import android.view.Surface
 import android.view.SurfaceHolder

@@ -2,10 +2,10 @@ package com.lockwood.laughingmanar.ui
 
 import android.content.pm.PackageManager
 import android.os.Build
-import android.support.v4.app.ActivityCompat
-import android.support.v4.view.GestureDetectorCompat
-import android.support.v7.app.AlertDialog
-import android.support.v7.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.view.GestureDetectorCompat
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.view.GestureDetector
 import android.view.KeyEvent
@@ -19,7 +19,6 @@ import com.lockwood.laughingmanar.mlkit.CameraSource
 import com.lockwood.laughingmanar.mlkit.CaptureMode
 import kotlinx.android.synthetic.main.activity_camera.*
 import java.io.IOException
-
 
 abstract class BaseActivity : AppCompatActivity(),
     View.OnClickListener, GestureDetector.OnGestureListener, ActivityCompat.OnRequestPermissionsResultCallback {
