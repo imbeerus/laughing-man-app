@@ -4,11 +4,11 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.hardware.Camera
 import android.os.Bundle
+import android.util.Log
+import android.view.View
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.GestureDetectorCompat
-import android.util.Log
-import android.view.View
 import com.google.android.gms.common.annotation.KeepName
 import com.lockwood.laughingmanar.R
 import kotlinx.android.synthetic.main.activity_camera.*
@@ -34,7 +34,7 @@ class CameraActivity : BaseActivity() {
 
         gestureDetector = GestureDetectorCompat(this, this)
 
-        actionButtons.forEach { it-> findViewById<View>(it).setOnClickListener(this) }
+        actionButtons.forEach { it -> findViewById<View>(it).setOnClickListener(this) }
 
         // Hide the toggle button if there is only 1 camera
         if (Camera.getNumberOfCameras() == 1) {
